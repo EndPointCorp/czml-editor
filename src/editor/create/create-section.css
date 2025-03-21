@@ -1,0 +1,10 @@
+.create-section-tool {
+    position: absolute;
+
+    top: 1em;
+
+    display: block;
+
+    width: 300px;
+    height: 400px;
+}
