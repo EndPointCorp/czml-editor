@@ -1,12 +1,13 @@
 import './editor.css';
 
-import { useCallback, useContext, useMemo, useState } from 'preact/hooks';
 import { Entity, Viewer } from 'cesium';
+import { useCallback, useContext, useMemo, useState } from 'preact/hooks';
 import { EntytyEditor } from './entity-editor';
 import { EntitiesList } from './entity-list/entities-list';
 
 import { createContext } from 'preact';
 import { ViewerContext } from '../app';
+import { StyleChanges } from '../geometry-editor/changes-tracker';
 import GeometryEditor from '../geometry-editor/geometry-editor';
 import { CreateEntityByClickController } from '../geometry-editor/input-new-entity';
 import { PositionDragController } from '../geometry-editor/position-drag-editor';
@@ -15,6 +16,7 @@ import { Google3DSwitch } from '../misc/elements/google3dSwitch';
 import { CreateEntitySection } from './create/create-section';
 import { FilesSection } from './import-export/files-section';
 import { types } from './meta/meta';
+import { StyleCopyDialogue } from './style-copy-dialogue';
 
 
 export type EditorContextT = {
@@ -60,6 +62,13 @@ export function Editor() {
     const [entity, setSelectedEntity] = useState<Entity | null>(null);
 
     const [extra, setExtra] = useState<EntitiesExtra>({});
+    const [stylesToPropagate, setStylesToPropagate] = useState<StyleChanges | null>(null);
+    const [stylesDialogue, setStylesDialogue] = useState<boolean>(false);
+
+    const propagateStyles = useCallback((styles: StyleChanges) => {
+        setStylesToPropagate(styles);
+        setStylesDialogue(true);
+    }, [setStylesToPropagate, setStylesDialogue]);
 
     const [resources, setResources] = useState<SharedResources>(DefaultSharedResources);
 
@@ -120,7 +129,9 @@ export function Editor() {
                     <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
                         onEntityExtraChange={handleEntityExtraChange}
                     />
-                    <EntytyEditor entity={entity} />
+                    <StyleCopyDialogue entities={entities} stylesToPropagate={stylesToPropagate}
+                        visible={stylesDialogue} onClose={() => setStylesDialogue(false)} />
+                    <EntytyEditor entity={entity} onStyleCopy={propagateStyles} />
                 </SharedResourcesContext>
             </EditorContext>
         </div>
