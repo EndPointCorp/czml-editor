@@ -29,6 +29,9 @@ export function VectorField({label, value, size, targetClass, componentNames, in
         const numArray = newArray.map(s => Number(s));
         const notNull = numArray.every(v => v !== undefined && !isNaN(v));
         const newVal = notNull && (targetClass && new targetClass(...numArray) || numArray);
+
+        console.log('newVal', newVal);
+        console.log('targetClass', targetClass);
         
         onChange && onChange(notNull ? newVal : undefined);
 

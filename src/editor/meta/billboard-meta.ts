@@ -1,4 +1,4 @@
-import { HorizontalOrigin, VerticalOrigin } from "cesium";
+import { Cartesian2, Cartesian3, Cartesian4, HorizontalOrigin, VerticalOrigin } from "cesium";
 import { PropertyMeta } from "./meta";
 
 const appearanceProps: PropertyMeta[] = [
@@ -18,17 +18,18 @@ const extraProps: PropertyMeta[] = [
     
     {name: 'translucencyByDistance', type: 'near-far-scalar'},
 
-    {name: 'pixelOffset', type: 'vector', size: 2},
+    {name: 'pixelOffset', type: 'vector', size: 2, targetClass: Cartesian2},
     {name: 'pixelOffsetScaleByDistance', type: 'near-far-scalar'},
     
     {name: 'scale', type: 'number'},
     {name: 'scaleByDistance', type: 'near-far-scalar'},
     
     {name: 'rotation', type: 'number'},
-    {name: 'alignedAxis', type: 'vector'},
+    {name: 'alignedAxis', type: 'vector', size: 3, targetClass: Cartesian3},
     
     {name: 'color', type: 'color', noAlpha: true},
-    {name: 'imageSubRegion', type: 'vector', size: 4,
+    {name: 'imageSubRegion', 
+        type: 'vector', size: 4, targetClass: Cartesian4,
         componentNames: ['x', 'y', 'width', 'height']},
         
     {name: 'distanceDisplayCondition', 

@@ -31,8 +31,8 @@ export type PropertyTypeEnum = {
 
 export type PropertyTypeVector = {
     type: 'vector';
-    targetClass?: Constructor<any>;
-    size?: number;
+    size: number;
+    targetClass: Constructor<any>;
     componentNames?: string[];
 };
 

@@ -13,6 +13,8 @@ import { ViewerContext } from '../app';
 import { CreateEntityByClickController } from '../geometry-editor/input-new-entity';
 import { PositionDragController } from '../geometry-editor/position-drag-editor';
 import { DefaultSharedResources, mapBillboardImageResources, SharedResources } from '../geometry-editor/shared-resources';
+import { StyleCopyDialogue } from './style-copy-dialogue';
+import { StyleChanges } from '../geometry-editor/changes-tracker';
 
 
 export type EditorContextT = {
@@ -46,6 +48,14 @@ export function Editor() {
     const [entities, setEntities] = useState<Entity[]>([]);
     const [entity, setSelectedEntity] = useState<Entity | null>(null);
 
+    const [stylesToPropagate, setStylesToPropagate] = useState<StyleChanges | null>(null);
+    const [stylesDialogue, setStylesDialogue] = useState<boolean>(false);
+
+    const propagateStyles = useCallback((styles: StyleChanges) => {
+        setStylesToPropagate(styles);
+        setStylesDialogue(true);
+    }, [setStylesToPropagate, setStylesDialogue]);
+
     const [resources, setResources] = useState<SharedResources>(DefaultSharedResources);
 
     const handleDsLoad = useCallback((newEntities: Entity[]) => {
@@ -74,7 +84,9 @@ export function Editor() {
                 <SharedResourcesContext value={{resources, setResources}}>
                     <CreateEntitySection {...{ onEntityCreated }} />
                     <EntitiesList {...{ entities, entity, selectEntity }} />
-                    <EntytyEditor entity={entity} />
+                    <StyleCopyDialogue entities={entities} stylesToPropagate={stylesToPropagate}
+                        visible={stylesDialogue} onClose={() => setStylesDialogue(false)} />
+                    <EntytyEditor entity={entity} onStyleCopy={propagateStyles} />
                 </SharedResourcesContext>
             </EditorContext>
         </div>

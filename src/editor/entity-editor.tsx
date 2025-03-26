@@ -20,17 +20,14 @@ import { OrientationEditor } from './orientation-editor';
 import { Section } from '../misc/elements/section';
 import { Subsection } from '../misc/elements/subsection';
 import { PropertyMeta } from './meta/meta';
-
-const changes = {
-    entityId: "",
-    style: {}
-};
+import { makeChangesSnapshot, StyleChanges, trackChange } from '../geometry-editor/changes-tracker';
 
 export type EntityEditorProps = {
     entity: Entity | null;
-    onChange?: (entity: Entity) => void;
+    onChange?: (entity: Entity, propertyPath?: string, value?: any) => void;
+    onStyleCopy?: (style: StyleChanges) => void;
 }
-export function EntytyEditor({entity, onChange}: EntityEditorProps) {
+export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps) {
 
     const [showData, setShowData] = useState<boolean>(false);
     const [_name, forceNameUpdate] = useState<string | undefined>(entity?.name);
@@ -44,27 +41,12 @@ export function EntytyEditor({entity, onChange}: EntityEditorProps) {
     }, [entity, onChange, forceNameUpdate]);
 
     const handleEntityChange = useCallback((val: any, feature?: string, property?: PropertyMeta) => {
-        if (entity) {
-            if (changes.entityId !== entity?.id) {
-                changes.entityId = entity.id;
-                changes.style = {};
-            }
-
-            changes.style = {
-                ...changes.style,
-                [`${feature}.${property?.name}`]: val
-            };
-        }
+        entity && trackChange(entity, `${feature}.${property?.name}`, val);
     }, [entity]);
 
     const handleStyleCopy = useCallback(() => {
-        const copy = Object.fromEntries(
-            Object.entries(changes.style)
-                .map(([key, val]) => [key, clone(val)])
-        );
-        
-        console.log(copy);
-    }, []);
+        onStyleCopy && onStyleCopy(makeChangesSnapshot());
+    }, [onStyleCopy]);
 
     const billboard = entity?.billboard;
     const showLabel = entity?.label?.show?.getValue();
@@ -112,28 +94,11 @@ export function EntytyEditor({entity, onChange}: EntityEditorProps) {
 
             <Subsection key={entity.id + '.subsection-styling'}>
                 <h4>Styling properties</h4>
-                <button onClick={handleStyleCopy} class={'size-s'}>Copy style changes</button>
+                <button onClick={handleStyleCopy} class={'size-s'}>Copy style</button>
                 <FeatureEditor entity={entity} 
                     metadata={applicableMeta} onChange={handleEntityChange}/>
             </Subsection>
 
         </Section>
     );
-}
-
-function clone(val: any) {
-    if (!val) {
-        return val;
-    }
-
-    // Most of the cesium property value objects should have clone method
-    if (val['clone'] && typeof val['clone'] === 'function') {
-       return val.clone();
-    }
-
-    if (Array.isArray(val)) {
-        return [...val];
-    }
-
-    return val;
 }

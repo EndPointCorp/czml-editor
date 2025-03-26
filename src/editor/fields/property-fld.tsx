@@ -25,13 +25,8 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
     const property = (subject as any)[metaProperty.name] as CesiumProperty;
     const interpolated = property !== undefined && property instanceof Property && !property.isConstant;
 
-    
     const value = (property as ConstantProperty)?.valueOf();
     
-    if (name === 'text') {
-      console.log(property, value);
-    }
-
     const [_oldVal, forceUpdate] = useState<any>();
 
     const changeHandler = useCallback((val: any) => {
@@ -74,6 +69,9 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
         
       case 'vector': {
         const {size, targetClass, componentNames} = metaProperty as PropertyTypeVector;
+
+        metaProperty.name === 'pixelOffset' && console.log(metaProperty);
+
         return <VectorField label={label} value={value} 
           {...{size, targetClass, componentNames}}
           onChange={changeHandler}/>;
