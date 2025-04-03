@@ -12,8 +12,9 @@ export type EntitiesListProps = {
     entity: Entity | null;
     extra: EntitiesExtra;
     selectEntity?: (entity: Entity | null) => void;
+    deleteEntity?: (entity: Entity) => void;
 }
-export function EntitiesList({entities, entity, extra, selectEntity}: EntitiesListProps) {
+export function EntitiesList({entities, entity, extra, selectEntity, deleteEntity}: EntitiesListProps) {
 
     const [showDataTable, setShowDataTable] = useState<boolean>(false);
 
@@ -22,7 +23,7 @@ export function EntitiesList({entities, entity, extra, selectEntity}: EntitiesLi
         const namePlaceholder = extra[e.id].namePlaceholder;
         return <EntityListElement key={e.id} entity={e} 
             selectedEntity={entity}
-            {...{isFolder, selectEntity, namePlaceholder}} />
+            {...{isFolder, selectEntity, deleteEntity, namePlaceholder}} />
         }
     );
 

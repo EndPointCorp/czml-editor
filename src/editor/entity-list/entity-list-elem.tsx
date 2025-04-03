@@ -12,6 +12,8 @@ import polygonSvg from "../../assets/polygon.svg";
 import polylineSvg from "../../assets/polyline.svg";
 import folderSvg from "../../assets/folder.svg";
 
+const Enable_Delete = false;
+
 const typeIcons = {
     billboard: billboardSvg,
     label: labelSvg,
@@ -26,13 +28,14 @@ type EntityListElementProps = {
     namePlaceholder?: string;
     selectedEntity: Entity | null;
     selectEntity?: (entity: Entity) => void;
+    deleteEntity?: (entity: Entity) => void;
 }
-export function EntityListElement({entity, isFolder, namePlaceholder, selectedEntity, selectEntity}: EntityListElementProps) {
+export function EntityListElement({entity, isFolder, namePlaceholder, selectedEntity, deleteEntity, selectEntity}: EntityListElementProps) {
 
     const divRef = useRef<HTMLDivElement>(null);
     
     const type = types.find(tname => (entity as any)[tname] !== undefined);
-    
+
     const title = entity.name || namePlaceholder;
     const isPlaceholder = !entity.name;
     
@@ -42,6 +45,14 @@ export function EntityListElement({entity, isFolder, namePlaceholder, selectedEn
         selectEntity && !isFolder && selectEntity(entity);
     }, [entity, selectEntity, isFolder]);
     
+    const handleDelete = useCallback((e: Event) => {
+        e.preventDefault();
+
+        if (deleteEntity && confirm("Delete this entity")) {
+            deleteEntity(entity);
+        }
+
+    }, [entity, deleteEntity]);
 
     if (selected && divRef.current) {
         divRef.current.scrollIntoView({block: 'nearest'});
@@ -57,8 +68,12 @@ export function EntityListElement({entity, isFolder, namePlaceholder, selectedEn
             <span>&nbsp;</span>
             
             <span class={cls('entity-title', isPlaceholder && 'title-placeholder')}>
-            {title}
-            </span> 
+                {title}
+            </span>
+
+            <span class={'entity-actions-divider'}></span>
+
+            {Enable_Delete && !isFolder && <button className={'size-s'} onClick={handleDelete} >delete</button>}
         </div>
     );
 }
