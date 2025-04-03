@@ -182,7 +182,7 @@ export function writePositionListValue(coords: Cartesian3[], encoding?: Position
 
         case "cartographicDegrees": 
         return {
-                "cartographicDegrees": coords.map(crt3toCtgArr).flat(1)
+                "cartographicDegrees": coords.map(crt3toCtgDegreesArr).flat(1)
             }
         case "cartesian":
             return {
@@ -196,7 +196,7 @@ export function writePositionListOfListValue(coords: Cartesian3[][], encoding?: 
     switch (encoding || "cartographicDegrees") {
         case "cartographicDegrees": 
         return {
-                "cartographicDegrees": coords.map(ring => ring.map(crt3toCtgArr).flat(1))
+                "cartographicDegrees": coords.map(ring => ring.map(crt3toCtgDegreesArr).flat(1))
             }
         case "cartesian":
             return {
@@ -206,9 +206,13 @@ export function writePositionListOfListValue(coords: Cartesian3[][], encoding?: 
     }
 }
 
-function crt3toCtgArr(c3: Cartesian3) {
+function radToDeg(rad: number) {
+    return rad * (180 / Math.PI);
+}
+
+function crt3toCtgDegreesArr(c3: Cartesian3) {
     const vc = Cartographic.fromCartesian(c3);
-    return [vc.longitude, vc.latitude, vc.height]
+    return [radToDeg(vc.longitude), radToDeg(vc.latitude), vc.height]
 }
 
 export function writeSampledPositionProperty(val: SampledPositionProperty, _ctx: WriterContext, encoding?: PositionEncoding) {
@@ -232,7 +236,7 @@ export function writeCartesianSamples(times: JulianDate[], values: Cartesian3[],
 
         if (encoding === "cartographicDegrees") {
             const vc = Cartographic.fromCartesian(v);
-            packetValues.push(...[t, vc.longitude, vc.latitude, vc.height]);
+            packetValues.push(...[t, radToDeg(vc.longitude), radToDeg(vc.latitude), vc.height]);
         }
         else {
             packetValues.push(...[t, v.x, v.y, v.z]);
@@ -249,7 +253,7 @@ export function writeCartesian3Position(val: Cartesian3, outType: PositionEncodi
         case "cartographicDegrees": 
             const cart = Cartographic.fromCartesian(val);
             return {
-                "cartographicDegrees": [cart.longitude, cart.latitude, cart.height]
+                "cartographicDegrees": [radToDeg(cart.longitude), radToDeg(cart.latitude), cart.height]
             }
         case "cartesian":
             return {

@@ -128,13 +128,13 @@ function writePolygonHierarchy(property: Property, ctx: WriterContext) {
 
     const ret: PositionsAndHoles = {
         // PositionList
-        positions: writePositionListValue(hierarchy.positions),
+        positions: writePositionListValue(hierarchy.positions, "cartographicDegrees"),
     };
 
     if (hierarchy.holes && hierarchy.holes.length > 0) {
         // PositionListOfLists
         const coords = hierarchy.holes.map(h => h.positions);
-        ret.holes = writePositionListOfListValue(coords);
+        ret.holes = writePositionListOfListValue(coords, "cartographicDegrees");
     }
 
     return ret;
