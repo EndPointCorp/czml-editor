@@ -26,8 +26,6 @@ type EntityListElementProps = {
     namePlaceholder?: string;
     selectedEntity: Entity | null;
     selectEntity?: (entity: Entity) => void;
-    selectedEntity: Entity | null;
-    typeStatistics: {[type: string]: number}
 }
 export function EntityListElement({entity, isFolder, namePlaceholder, selectedEntity, selectEntity}: EntityListElementProps) {
 
