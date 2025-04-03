@@ -1,7 +1,7 @@
 import './editor.css';
 
 import { useCallback, useContext, useMemo, useState } from 'preact/hooks';
-import { Entity } from 'cesium';
+import { Entity, Viewer } from 'cesium';
 import { EntytyEditor } from './entity-editor';
 import { EntitiesList } from './entity-list/entities-list';
 
@@ -82,7 +82,7 @@ export function Editor() {
     const deleteEntity = useCallback((entity: Entity) => {
         console.log('delete entity', entity);
         
-        viewer?.entities?.removeById(entity.id);
+        viewer && removeEntitytFromViewer(viewer, entity);
 
         delete extra[entity.id];
         setExtra(extra);
@@ -140,4 +140,8 @@ function updateExtra(extra: EntitiesExtra, entities: Entity[]) {
         }
     });
     
+}
+
+function removeEntitytFromViewer(_v: Viewer, entity: Entity) {
+    entity.entityCollection.remove(entity);
 }

@@ -12,8 +12,6 @@ import polygonSvg from "../../assets/polygon.svg";
 import polylineSvg from "../../assets/polyline.svg";
 import folderSvg from "../../assets/folder.svg";
 
-const Enable_Delete = false;
-
 const typeIcons = {
     billboard: billboardSvg,
     label: labelSvg,
@@ -46,6 +44,7 @@ export function EntityListElement({entity, isFolder, namePlaceholder, selectedEn
     }, [entity, selectEntity, isFolder]);
     
     const handleDelete = useCallback((e: Event) => {
+        e.stopPropagation();
         e.preventDefault();
 
         if (deleteEntity && confirm("Delete this entity")) {
@@ -73,7 +72,7 @@ export function EntityListElement({entity, isFolder, namePlaceholder, selectedEn
 
             <span class={'entity-actions-divider'}></span>
 
-            {Enable_Delete && !isFolder && <button className={'size-s'} onClick={handleDelete} >delete</button>}
+            {!isFolder && <button className={'size-s'} onClick={handleDelete} >delete</button>}
         </div>
     );
 }
