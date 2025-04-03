@@ -1,7 +1,7 @@
 import { DistanceDisplayCondition, NearFarScalar } from "cesium";
 
 
-export const types = ['billboard', 'label', 'polyline', 'polygon', 'model'];
+export const types = ['billboard', 'label', 'polyline', 'polygon', 'model'] as const;
 
 type Constructor<T = any> = new (...args: any[]) => T;
 

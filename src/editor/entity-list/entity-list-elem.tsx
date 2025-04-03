@@ -22,20 +22,21 @@ const typeIcons = {
 
 type EntityListElementProps = {
     entity: Entity;
-    entities: Entity[];
+    isFolder: boolean;
+    namePlaceholder?: string;
+    selectedEntity: Entity | null;
     selectEntity?: (entity: Entity) => void;
     selectedEntity: Entity | null;
     typeStatistics: {[type: string]: number}
 }
-export function EntityListElement({entity, selectedEntity, entities, typeStatistics, selectEntity}: EntityListElementProps) {
+export function EntityListElement({entity, isFolder, namePlaceholder, selectedEntity, selectEntity}: EntityListElementProps) {
 
     const divRef = useRef<HTMLDivElement>(null);
     
     const type = types.find(tname => (entity as any)[tname] !== undefined);
-    const isFolder = type === undefined && entities.some(pe => pe.parent?.id === entity.id);
     
-    const typeCount = type !== undefined ? (typeStatistics)[type] : 0;
-    const title = entity.name || `${type} ${typeCount}`;
+    const title = entity.name || namePlaceholder;
+    const isPlaceholder = !entity.name;
     
     const selected = selectedEntity === entity;
     
@@ -57,7 +58,7 @@ export function EntityListElement({entity, selectedEntity, entities, typeStatist
     
             <span>&nbsp;</span>
             
-            <span class={'entity-title'}>
+            <span class={cls('entity-title', isPlaceholder && 'title-placeholder')}>
             {title}
             </span> 
         </div>
