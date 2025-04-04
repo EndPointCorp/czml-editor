@@ -37,6 +37,13 @@ const CONTROL_POINT_BILLBOARD_OPTIONS = {
 type GeometryType = "polygon" | "polyline";
 type GeometryProperty = "positions" | "hierarchy";
 
+type CesiumScreenSpaceControllerCallback = 
+    Cesium.ScreenSpaceEventHandler.PositionedEventCallback | 
+    Cesium.ScreenSpaceEventHandler.MotionEventCallback | 
+    Cesium.ScreenSpaceEventHandler.WheelEventCallback | 
+    Cesium.ScreenSpaceEventHandler.TwoPointEventCallback | 
+    Cesium.ScreenSpaceEventHandler.TwoPointMotionEventCallback;
+
 export default class GeometryEditor {
     
     static controlPointsDisplay: Cesium.CustomDataSource;
@@ -61,6 +68,7 @@ export default class GeometryEditor {
 
     _mouseDownPosition: Cesium.Cartographic | null = null;
     _mouseDownEntityPosition: Cesium.Cartographic | null = null;
+    _defaultLeftClickHandler: CesiumScreenSpaceControllerCallback | null = null;
 
     
     constructor(viewer: Cesium.Viewer) {
@@ -75,6 +83,8 @@ export default class GeometryEditor {
         }
 
         this._createScreenSpaceEventHandler();
+        this._defaultLeftClickHandler = 
+            this.viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
     newEntity(type: GeometryType) {
@@ -96,6 +106,8 @@ export default class GeometryEditor {
             });
         }
 
+        this.disablePick();
+
         return this.entity;
     }
 
@@ -111,6 +123,8 @@ export default class GeometryEditor {
 
         // @ts-ignore
         this.entity[this._type][this._entityGeometryProperty] = new Cesium.CallbackProperty(this._geometryCallback.bind(this), false);
+
+        this.disablePick();
 
         return this.entity;
     }
@@ -184,6 +198,7 @@ export default class GeometryEditor {
 
         // @ts-ignore
         this.entity[this._type][this._entityGeometryProperty] = new Cesium.ConstantProperty(this._geometryCallback());
+        this.enablePick();
         this.reset();
 
         return entity;
@@ -195,6 +210,7 @@ export default class GeometryEditor {
             // @ts-ignore
             this.entity[this._type][this._entityGeometryProperty] = this._oldGeometry;
         }
+        this.enablePick();
         this.reset();
         
         return entity;
@@ -209,6 +225,20 @@ export default class GeometryEditor {
     enableDefaultControls() {
         if (this.viewer) {
             this.viewer.scene.screenSpaceCameraController.enableInputs = true;
+        }
+    }
+
+    disablePick() {
+        if (this.viewer) {
+            console.log('disable pick');
+            this.viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }
+    }
+    
+    enablePick() {
+        if (this.viewer && this._defaultLeftClickHandler) {
+            console.log('reenable pick');
+            this.viewer.screenSpaceEventHandler.setInputAction(this._defaultLeftClickHandler, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         }
     }
 
@@ -286,7 +316,7 @@ export default class GeometryEditor {
             billboard: {
                 ...CONTROL_POINT_BILLBOARD_OPTIONS,
                 color
-            }
+            },
         });
 
         const inx = index === undefined ? this._controlPoints.length : index;
