@@ -5,25 +5,33 @@ import './entities-list.css';
 import { EntityListElement } from "./entity-list-elem";
 import { useState } from "preact/hooks";
 import { EntitiesDataTable } from "./entities-data-table";
-import { EntitiesExtra } from "../editor";
+import { EntitiesExtra, EntityExtra } from "../editor";
 
 export type EntitiesListProps = {
     entities: Entity[];
     entity: Entity | null;
     extra: EntitiesExtra;
+    onEntityExtraChange?: (entity: Entity, extra: EntityExtra) => void;
     selectEntity?: (entity: Entity | null) => void;
     deleteEntity?: (entity: Entity) => void;
 }
-export function EntitiesList({entities, entity, extra, selectEntity, deleteEntity}: EntitiesListProps) {
+export function EntitiesList({entities, entity, extra, onEntityExtraChange, selectEntity, deleteEntity}: EntitiesListProps) {
 
     const [showDataTable, setShowDataTable] = useState<boolean>(false);
 
     const $entities = entities.map(e => {
         const isFolder = entities.some(pe => pe.parent?.id === e.id);
-        const namePlaceholder = extra[e.id].namePlaceholder;
+        
+        const entityExtra = extra[e.id];
+
+        const handleEntityExtraChange = (newExtra: EntityExtra) => {
+            onEntityExtraChange && onEntityExtraChange(e, newExtra);
+        }
+
         return <EntityListElement key={e.id} entity={e} 
             selectedEntity={entity}
-            {...{isFolder, selectEntity, deleteEntity, namePlaceholder}} />
+            onEntityExtraChange={handleEntityExtraChange}
+            {...{isFolder, selectEntity, deleteEntity, entityExtra}} />
         }
     );
 

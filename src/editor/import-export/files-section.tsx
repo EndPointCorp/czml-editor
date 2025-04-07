@@ -4,14 +4,16 @@ import { LoadFiles } from "./load-files";
 import { ExportFiles } from "./export-files";
 import { Section } from "../../misc/elements/section";
 import { useEffect, useState } from "preact/hooks";
+import { EntitiesExtra } from "../editor";
 
 export type CesiumDataSource = CzmlDataSource | KmlDataSource | GeoJsonDataSource;
 
 export type FilesSectionProps = {
     entities: Entity[];
+    entitiesExtra?: EntitiesExtra;
     onLoad: (entities: Entity[], dataSource: CesiumDataSource, file: File) => any;
 }
-export function FilesSection({ entities, onLoad }: FilesSectionProps) {
+export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionProps) {
 
     const [exported, setExported] = useState<boolean>(false);
 
@@ -31,7 +33,9 @@ export function FilesSection({ entities, onLoad }: FilesSectionProps) {
     return (
         <Section header={'Import / Export'} className={'upload-section'}>
             <LoadFiles onLoad={onLoad} />
-            <ExportFiles entities={entities} onExport={() => {setExported(true);}} />
+            <ExportFiles entities={entities} 
+                entitiesExtra={entitiesExtra} 
+                onExport={() => {setExported(true);}} />
         </Section>
     );
 }

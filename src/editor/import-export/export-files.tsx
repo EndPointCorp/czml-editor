@@ -6,19 +6,25 @@ import { exportAsCzml } from "../../czml-ext/export-czml";
 
 import { ZipWriter, BlobWriter, TextReader } from "@zip.js/zip.js"
 import { ModalPane } from "../../misc/elements/modal-pane";
+import { EntitiesExtra } from "../editor";
 
 
 type ExportFilesProps = {
     entities: Entity[];
+    entitiesExtra?: EntitiesExtra;
     onExport?: () => void;
 };
-export function ExportFiles({entities, onExport}: ExportFilesProps) {
+export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProps) {
 
     const [exportDialogueOpen, setExportDialogueOpen] = useState<boolean>(false);
 
     const handleDownloadKML = useCallback((archived?: boolean) => {
         const ds = new CustomDataSource("export");
-        entities.forEach(e => ds.entities.add(e));
+        
+        entities
+            .filter(e => !(entitiesExtra?.[e.id].doNotExport))
+            .forEach(e => ds.entities.add(e));
+        
         exportKml({ entities: ds.entities, kmz: archived }).then(async result => {
 
             const kmlText = (result as exportKmlResultKml).kml;
@@ -44,11 +50,15 @@ export function ExportFiles({entities, onExport}: ExportFilesProps) {
                 downloadAsFile(kmlDataLink, 'document.kml');
             }
         });
-    }, [entities, onExport]);
+    }, [entities, entitiesExtra, onExport]);
 
     const handleDownloadCZML = useCallback(async (archived?: boolean) => {
         const options = { exportImages: archived, exportModels: archived };
-        const { czml, exportedImages } = await exportAsCzml(entities, options);
+
+        const entitiesToExport = entities
+            .filter(e => !(entitiesExtra?.[e.id].doNotExport));
+
+        const { czml, exportedImages } = await exportAsCzml(entitiesToExport, options);
         
         try {
             const czmlText = JSON.stringify(czml);
@@ -78,7 +88,7 @@ export function ExportFiles({entities, onExport}: ExportFilesProps) {
             console.error(e);
         }
         
-    }, [entities, onExport]);
+    }, [entities, entitiesExtra, onExport]);
 
     return (
         <div class={'export'}>

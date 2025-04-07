@@ -37,6 +37,7 @@ export const SharedResourcesContext = createContext<SharedResourcesContextT>({
 
 export type EntityExtra = {
     namePlaceholder?: string;
+    doNotExport?: boolean;
 }
 
 export type EntitiesExtra = {
@@ -104,14 +105,21 @@ export function Editor() {
         setSelectedEntity(newEntity);
     }, [entities, setEntities, setSelectedEntity, extra, setExtra]);
 
+    const handleEntityExtraChange = useCallback((entity: Entity, entityNewExtra: EntityExtra) => {
+        extra[entity.id] = entityNewExtra;
+        setExtra({...extra});
+    }, [extra, setExtra]);
+
     return (
         <div id={'editor'} class={'section entity-editor'}>
             <EditorContext value={editorContext}>
-                <FilesSection entities={entities} onLoad={handleDsLoad} />
+                <FilesSection entities={entities} entitiesExtra={extra} onLoad={handleDsLoad} />
                 <Google3DSwitch />
                 <SharedResourcesContext value={{resources, setResources}}>
                     <CreateEntitySection {...{ onEntityCreated }} />
-                    <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} />
+                    <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
+                        onEntityExtraChange={handleEntityExtraChange}
+                    />
                     <EntytyEditor entity={entity} />
                 </SharedResourcesContext>
             </EditorContext>

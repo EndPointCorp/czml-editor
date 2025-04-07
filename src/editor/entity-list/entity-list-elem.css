@@ -5,11 +5,21 @@
 
 .entity {
     padding: 0.25em 0 0.25em 0;
-
     border-bottom: 1px dashed #222;
+
+    display: flex;
+    flex-direction: row;
 }
 
 .title-placeholder {
     font-style: italic;
 }
 
+.entity-actions-divider {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+.entity-actions {
+    padding-right: 0.5em;
+}

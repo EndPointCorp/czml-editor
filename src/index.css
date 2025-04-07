@@ -87,6 +87,10 @@ button.size-s, .button-size-s button {
   font-size: 0.75em;
 }
 
+button.icon-button {
+  background-color: transparent;
+}
+
 button {
   border-radius: 6px;
   border: 1px solid transparent;
