@@ -1,4 +1,4 @@
-import { BillboardGraphics, Property as CesiumProperty, ConstantProperty, DistanceDisplayCondition, LabelGraphics, NearFarScalar, PolygonGraphics, PolylineGraphics } from "cesium";
+import { BillboardGraphics, Property as CesiumProperty, ConstantProperty, DistanceDisplayCondition, LabelGraphics, ModelGraphics, NearFarScalar, PolygonGraphics, PolylineGraphics } from "cesium";
 import { useCallback, useState } from 'preact/hooks';
 import camelCaseToTitle from '../../misc/cammelToTitle';
 import { DistanceDisplayConditionAsVector, NearFarAsVector, PropertyMeta, PropertyTypeVector } from '../meta/meta';
@@ -11,8 +11,10 @@ import { VectorField } from './vector-fld';
 
 import "./property-fld.css";
 
+export type SupportedGraphic = PolygonGraphics | PolylineGraphics | BillboardGraphics | LabelGraphics | ModelGraphics;
+
 export type PropertyFieldProps = {
-    subject: PolygonGraphics | PolylineGraphics | BillboardGraphics | LabelGraphics
+    subject: SupportedGraphic
     property: PropertyMeta;
     onChange?: (value: any) => void;
 }
@@ -68,8 +70,6 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
         
       case 'vector': {
         const {size, targetClass, componentNames} = metaProperty as PropertyTypeVector;
-
-        metaProperty.name === 'pixelOffset' && console.log(metaProperty);
 
         return <VectorField label={label} value={value} 
           {...{size, targetClass, componentNames}}

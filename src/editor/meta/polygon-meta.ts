@@ -1,15 +1,11 @@
 import { ClassificationType, HeightReference } from "cesium";
-import { heightReferenceDescription, PropertyMeta } from "./meta";
+import { PropertyMeta } from "./meta";
 
 const geomProperties: PropertyMeta[] = [
     {name: 'height', type: 'number'}, 
     {name: 'extrudedHeight', type: 'number'}, 
-    {name: 'heightReference', type: 'enum', enum: HeightReference,
-        description: heightReferenceDescription
-    },
-    {name: 'extrudedHeightReference', type: 'enum', enum: HeightReference,
-        description: heightReferenceDescription
-    }, 
+    {name: 'heightReference', type: 'enum', enum: HeightReference},
+    {name: 'extrudedHeightReference', type: 'enum', enum: HeightReference}, 
     {name: 'perPositionHeight', type: 'boolean'},
     {name: 'closeBottom', type: 'boolean'},
     {name: 'closeTop', type: 'boolean'},

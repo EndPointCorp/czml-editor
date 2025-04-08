@@ -1,4 +1,9 @@
 import { DistanceDisplayCondition, NearFarScalar } from "cesium";
+import { billboardMetaData } from "./billboard-meta";
+import { labelMetadata } from "./label-meta";
+import { polylineMetaData } from "./polyline-meta";
+import { polygonMetaData } from "./polygon-meta";
+import { modelMetaData } from "./model-meta";
 
 
 export const types = ['billboard', 'label', 'polyline', 'polygon', 'model'] as const;
@@ -71,12 +76,21 @@ export type FeatureMetaData = {
     propertyGroups: PropertyGroup[];
 }
 
-export const heightReferenceDescription = `
-NONE - The position is absolute.
-CLAMP_TO_GROUND - The position is clamped to the terrain and 3D Tiles.
-RELATIVE_TO_GROUND - The position height is the height above the terrain and 3D Tiles.
-CLAMP_TO_TERRAIN - The position is clamped to terain.
-RELATIVE_TO_TERRAIN - The position height is the height above terrain.
-CLAMP_TO_3D_TILE - The position is clamped to 3D Tiles.
-RELATIVE_TO_3D_TILE - The position height is the height above 3D Tiles.
-`;
+export const metaByType = {
+    billboard: billboardMetaData,
+    label: labelMetadata,
+    polyline: polylineMetaData,
+    polygon: polygonMetaData,
+    model: modelMetaData,
+};
+
+export type TypeMetaKey = keyof typeof metaByType;
+
+export function getPropertyMeta(featureType: TypeMetaKey, propertyName: string) {
+    const featureMeta = metaByType[featureType];
+    if (featureMeta) {
+        return featureMeta.propertyGroups
+            .map(pg => pg.properties).flat(1)
+            .find(p => p.name === propertyName);
+    }
+}
