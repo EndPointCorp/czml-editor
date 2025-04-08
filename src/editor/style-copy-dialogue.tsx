@@ -1,8 +1,8 @@
-import { ConstantProperty, Entity, PolygonGraphics } from "cesium";
+import { Color, ConstantProperty, DistanceDisplayCondition, Entity, NearFarScalar, PolygonGraphics } from "cesium";
 import { ModalPane } from "../misc/elements/modal-pane";
 import { useCallback, useState } from "preact/hooks";
 import { applyStyleToEntity, StyleChanges } from "../geometry-editor/changes-tracker";
-import { getPropertyMeta, metaByType, PropertyMeta, TypeMetaKey } from "./meta/meta";
+import { DistanceDisplayConditionAsVector, getPropertyMeta, metaByType, NearFarAsVector, PropertyMeta, PropertyTypeEnum, PropertyTypeVector, TypeMetaKey } from "./meta/meta";
 import { PropertyField, SupportedGraphic } from "./fields/property-fld";
 
 type StyleCopyDialogueProps = {
@@ -34,7 +34,7 @@ export function StyleCopyDialogue({visible, entities, stylesToPropagate, onClose
 
         const propMeta = getPropertyMeta(featureType as TypeMetaKey, propName);
 
-        const preview = <PropertyValuePreview value={styleValue} propMeta={propMeta} />
+        const preview = <PropertyValuePreview value={styleValue} propMeta={propMeta} readonly={true} />
 
         return <div key={styleProp}>
             <input type="checkbox" checked={true} /> {styleProp} { preview } 
@@ -66,14 +66,103 @@ export function StyleCopyDialogue({visible, entities, stylesToPropagate, onClose
 
 type PropertyValuePreviewProps = {
     value?: any;
-    propMeta?: PropertyMeta
+    propMeta?: PropertyMeta;
+    readonly: boolean
 }
-function PropertyValuePreview({value, propMeta}: PropertyValuePreviewProps) {
-    if (propMeta) {
-        const feature = propMeta && {[propMeta.name]: new ConstantProperty(value)};
+function PropertyValuePreview({value, propMeta, readonly}: PropertyValuePreviewProps) {
+    if (readonly) {
+        switch (propMeta?.type) {
+            case 'string':
+            return <div>{JSON.stringify(value)}</div>;
+    
+            case 'number':
+            return <div>{JSON.stringify(value)}</div>;
+            
+            case 'boolean':
+            return <div>{JSON.stringify(value)}</div>;
+            
+            case 'vector': {
+                const {size, componentNames = ['x', 'y', 'z', 'w']} = propMeta as PropertyTypeVector;
+                return <VectorPreview {...{value, size, componentNames}} />;
+            }
+            
+            case 'distance-display-condition': {
+                const {size, componentNames = []} = DistanceDisplayConditionAsVector;
+    
+                const arrayValue = value && [
+                    (value as DistanceDisplayCondition)?.near,
+                    (value as DistanceDisplayCondition)?.far,
+                ];
+                
+                return <VectorPreview value={arrayValue} {...{size, componentNames}} />;
+            }
+            
+            case 'near-far-scalar': {
+            const {size, componentNames = []} = NearFarAsVector;
+    
+                const arrayValue = value && [
+                    (value as NearFarScalar)?.near,
+                    (value as NearFarScalar)?.nearValue,
+                    (value as NearFarScalar)?.far,
+                    (value as NearFarScalar)?.farValue,
+                ];
+                
+                return <VectorPreview value={arrayValue} {...{size, componentNames}} />;
+            }
+    
+            case 'enum': {
+                const enumObj = (propMeta as PropertyTypeEnum).enum;
+                const [val] = Object.entries(enumObj).find(([_, ev]) => ev === value) || [];
+                return <div>{val}</div>;
+            }
+    
+            case 'color': {
+                const colorStr = (value as Color)?.toCssHexString() || 'none';
+                return <div><span style={{backgroundColor: `${colorStr}`}}>{colorStr}</span></div>;
+            }
+            
+            case 'material': {
+                const val = value?.color?.valueOf();
+                const colorStr = (val as Color)?.toCssHexString() || 'none';
+                return <div><span style={{backgroundColor: `${colorStr}`}}>{colorStr}</span></div>;
 
-        return <PropertyField property={propMeta} subject={feature as unknown as SupportedGraphic} />
-    } 
+            }
+            
+            case 'image-url':
+            return <div><img style={{maxWidth: '2em', maxHeight: '2em'}} src={value}/></div>;
+    
+            default:
+            // @ts-ignore ignore, unreachable at the moment
+            return <div>{JSON.stringify(value)}</div>
+        }
+    }
+    else {
+        if (propMeta) {
+            const feature = propMeta && {[propMeta.name]: new ConstantProperty(value)};
+    
+            return <PropertyField property={propMeta} subject={feature as unknown as SupportedGraphic} />
+        } 
+
+        return <span>{JSON.stringify(value)}</span>
+    }
         
-    return <span>{JSON.stringify(value)}</span>
+}
+
+type VectorPreviewProps = {
+    value: any[];
+    size: number;
+    componentNames: string[];
+}
+function VectorPreview({value, size, componentNames}:VectorPreviewProps) {
+    const cmpnts = [];
+    for (var i = 0; i < size; i++) {
+        cmpnts.push(<div>
+            <div>{componentNames[i]}</div>
+            <div>{value[i]}</div>
+        </div>);
+    }
+
+    return <div>
+        {cmpnts}
+    </div>
 }
