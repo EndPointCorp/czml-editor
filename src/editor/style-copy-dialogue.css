@@ -1,0 +1,20 @@
+.style-change-entry {
+    margin-top: 0.75em;
+}
+
+.style-preview-value {
+    padding-left: 0.75em;
+    color: var(--main-black);
+}
+
+.style-preview-value .color-preview {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.1em;
+    margin-right: 0.5em;
+}
+
+.style-preview-value .component-name {
+    color: #aaa;
+}

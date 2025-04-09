@@ -39,11 +39,14 @@ export function makeChangesSnapshot() {
     } as StyleChanges;
 }
 
-export function applyStyleToEntity(entities: Entity[], styles: StyleChanges) {
+type StylesT = {
+    [key: string]: any
+}
+export function applyStyleToEntity(entities: Entity[], styles: StylesT) {
 
     console.log('Apply styles', styles);
 
-    Object.entries(styles.style).forEach(([propPath, val]) => {
+    Object.entries(styles).forEach(([propPath, val]) => {
         const [featureName, propName] = propPath.split('.');
         for (const entity of entities) {
             const feature = (entity as any)[featureName];

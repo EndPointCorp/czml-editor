@@ -119,6 +119,8 @@ export function Editor() {
         setExtra({...extra});
     }, [extra, setExtra]);
 
+    const stylesHash = strHashCode(JSON.stringify(stylesToPropagate));
+
     return (
         <div id={'editor'} class={'section entity-editor'}>
             <EditorContext value={editorContext}>
@@ -129,7 +131,7 @@ export function Editor() {
                     <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
                         onEntityExtraChange={handleEntityExtraChange}
                     />
-                    <StyleCopyDialogue entities={entities} stylesToPropagate={stylesToPropagate}
+                    <StyleCopyDialogue key={stylesHash} entities={entities} stylesToPropagate={stylesToPropagate}
                         visible={stylesDialogue} onClose={() => setStylesDialogue(false)} />
                     <EntytyEditor entity={entity} onStyleCopy={propagateStyles} />
                 </SharedResourcesContext>
@@ -164,3 +166,17 @@ function updateExtra(extra: EntitiesExtra, entities: Entity[]) {
 function removeEntitytFromViewer(_v: Viewer, entity: Entity) {
     entity.entityCollection.remove(entity);
 }
+
+function strHashCode(str: string) {
+    var hash = 0, i, chr;
+
+    if (str.length === 0) return hash;
+
+    for (i = 0; i < str.length; i++) {
+      chr = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0; // Convert to 32bit integer
+    }
+
+    return hash;
+  }

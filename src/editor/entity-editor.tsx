@@ -94,7 +94,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
 
             <Subsection key={entity.id + '.subsection-styling'}>
                 <h4>Styling properties</h4>
-                <button onClick={handleStyleCopy} class={'size-s'}>Copy style</button>
+                <button onClick={handleStyleCopy}>Copy styles</button>
                 <FeatureEditor entity={entity} 
                     metadata={applicableMeta} onChange={handleEntityChange}/>
             </Subsection>
