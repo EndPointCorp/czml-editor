@@ -77,7 +77,9 @@ export function writeCartesian(property: Property, ctx: WriterContext) {
     const val = writeScalar(property, ctx);
     if (val === undefined || val === null || val.reference) return val;
 
-    return writeCartesianVal(val);
+    return {
+        cartesian: writeCartesianVal(val)
+    }
 }
 
 export function writeColor(property: Property, ctx: WriterContext) {
@@ -102,7 +104,9 @@ export function writeBoundingRectangle(property: Property, ctx: WriterContext) {
     const val = writeScalar(property, ctx);
     if (val === undefined || val === null || val.reference) return val;
 
-    return writeBoundingRectangleValue(val as BoundingRectangle);
+    return {
+        boundingRectangle: writeBoundingRectangleValue(val as BoundingRectangle)
+    }
 }
 
 export function writePositionList(property: Property, ctx: WriterContext, encoding?: PositionEncoding) {
@@ -215,23 +219,26 @@ function crt3toCtgDegreesArr(c3: Cartesian3) {
     return [radToDeg(vc.longitude), radToDeg(vc.latitude), vc.height]
 }
 
-export function writeSampledPositionProperty(val: SampledPositionProperty, _ctx: WriterContext, encoding?: PositionEncoding) {
-    const sampledProperty = (val.interpolationAlgorithm as any)['_property'] as SampledProperty;
-
+export function writeSampledPositionProperty(val: SampledPositionProperty, ctx: WriterContext, encoding?: PositionEncoding) {
+    const sampledProperty = (val as any)['_property'];
     const times = (sampledProperty as any)['_times'] as JulianDate[];
-    const values = (sampledProperty as any)['_values'] as Cartesian3[];
+    const values = Cartesian3.unpackArray((sampledProperty as any)['_values']);
+    
+    const epoch = ctx.clock?.startTime || times[0];
 
-    return writeCartesianSamples(times, values, _ctx, encoding || "cartographicDegrees");
+    const packet = writeCartesianSamples(times, epoch, values, ctx, encoding || "cartographicDegrees");
+    if (epoch) {
+        (packet as any).epoch = epoch.toString();
+    }
+
+    return packet;
 }
 
-export function writeCartesianSamples(times: JulianDate[], values: Cartesian3[], ctx: WriterContext, encoding: PositionEncoding) {
+export function writeCartesianSamples(times: JulianDate[], epoch: JulianDate,  values: Cartesian3[], _ctx: WriterContext, encoding: PositionEncoding) {
     const packetValues = [];
-    const clock = ctx.clock;
-
-    const startDate = clock?.startTime;
-
+    
     for (let i = 0; i < times.length; i++) {
-        const t = startDate ? JulianDate.secondsDifference(times[i], startDate) : times[i].toString();
+        const t = epoch ? JulianDate.secondsDifference(times[i], epoch) : times[i].toString();
         const v = values[i];
 
         if (encoding === "cartographicDegrees") {

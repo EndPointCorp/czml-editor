@@ -114,9 +114,16 @@ export async function entityToPacket(entity: Entity, ctx: WriterContext) {
     } as any;
 
     if (entity.availability) {
+        let availability: string | string[] = 
+            writeTimeIntervalCollectionValue(entity.availability, {...ctx, path: ['availability']});
+        
+        if (availability.length === 1) {
+            availability = availability[0];
+        }
+        
         packet = {
             ...packet,
-            availability: writeTimeIntervalCollectionValue(entity.availability, {...ctx, path: ['availability']})
+            availability
         }
     }
     
