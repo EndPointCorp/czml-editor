@@ -1,0 +1,3 @@
+[submodule "3dparty/cesium-img-selector"]
+	path = 3dparty/cesium-img-selector
+	url = git@bits.endpointdev.com:visionport/cesium-img-selector.git

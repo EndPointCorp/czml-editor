@@ -17,7 +17,6 @@ import {
     ReferenceFrame, 
     ReferenceProperty, 
     SampledPositionProperty, 
-    SampledProperty, 
     TimeInterval, 
     TimeIntervalCollection, 
     VelocityOrientationProperty 

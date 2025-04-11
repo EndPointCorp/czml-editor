@@ -12,7 +12,6 @@ import GeometryEditor from '../geometry-editor/geometry-editor';
 import { CreateEntityByClickController } from '../geometry-editor/input-new-entity';
 import { PositionDragController } from '../geometry-editor/position-drag-editor';
 import { DefaultSharedResources, mapBillboardImageResources, SharedResources } from '../geometry-editor/shared-resources';
-import { Google3DSwitch } from '../misc/elements/google3dSwitch';
 import { CreateEntitySection } from './create/create-section';
 import { FilesSection } from './import-export/files-section';
 import { types } from './meta/meta';
@@ -125,7 +124,6 @@ export function Editor() {
         <div id={'editor'} class={'section entity-editor'}>
             <EditorContext value={editorContext}>
                 <FilesSection entities={entities} entitiesExtra={extra} onLoad={handleDsLoad} />
-                <Google3DSwitch />
                 <SharedResourcesContext value={{resources, setResources}}>
                     <CreateEntitySection {...{ onEntityCreated }} />
                     <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 

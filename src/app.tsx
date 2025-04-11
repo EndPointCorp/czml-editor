@@ -1,12 +1,12 @@
 import './app.css'
 import "cesium/Build/Cesium/Widgets/widgets.css";
 
-import { Viewer as CesiumViewer, Ion} from 'cesium'
+import { Viewer as CesiumViewer, Ion } from 'cesium'
 import { Editor } from './editor/editor';
 import { MainLayout } from './misc/elements/main-layout';
 import { useEffect, useState } from 'preact/hooks';
-
 import { createContext } from 'preact';
+import { createSelector } from './img-selector/integration';
 
 Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJmZjBlYmNhMy0yY2RiLTQxZmQtOTk5Ny00NDE4YTBjMTI4M2YiLCJpZCI6MTEwMzQ1LCJpYXQiOjE3NDM1MzgyNjl9.BEY-3Gs-JVELjQq_Hegq5i_TMcWheejiTnauWSH7qxA';
 
@@ -18,7 +18,7 @@ export function App() {
 
   useEffect(() => {
     if (viewer == null) {
-      setViewer(new CesiumViewer('cesiumContainer', {
+      const vwr = new CesiumViewer('cesiumContainer', {
         animation: false,
         baseLayerPicker: false,
         fullscreenButton: false,
@@ -32,7 +32,11 @@ export function App() {
         navigationInstructionsInitiallyVisible: false,
         scene3DOnly: true,
         shouldAnimate: true
-      })); 
+      });
+
+      createSelector(vwr);
+
+      setViewer(vwr); 
     }
   }, [viewer, setViewer]);
 
@@ -49,4 +53,3 @@ export function App() {
     />
   );
 }
-

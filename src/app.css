@@ -16,3 +16,17 @@
   height: 100vh;
   width: 100%;
 }
+
+#cesiumContainer {
+  --img-selector-top: 4.75em;
+}
+
+#cesiumContainer .img-selector-toggle {
+  width: 4em;
+  height: 4em;
+
+  background-image: url('./img-selector/assets/globe.svg');
+  background-repeat: no-repeat;
+  background-size: 90% 90%;
+  background-position: center;
+}

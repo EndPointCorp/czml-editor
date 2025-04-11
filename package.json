@@ -8,12 +8,15 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "clean": "rm -rf node_modules/* && rm yarn.lock",
+    "update-img-selector": "yarn cache clean && yarn remove cesium-img-selector && yarn add file:3dparty/cesium-img-selector",
     "predeploy": "yarn build",
     "deploy": "gh-pages --nojekyll -d dist"
   },
   "dependencies": {
     "@types/cesium": "^1.70.4",
     "cesium": "^1.126.0",
+    "cesium-img-selector": "file:3dparty/cesium-img-selector",
     "html-format": "^1.1.7",
     "preact": "^10.25.4"
   },
