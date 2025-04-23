@@ -1,0 +1,19 @@
+.param-label {
+    display: inline-block;
+    width: 8em;
+}
+.param-value {
+    display: inline-block;
+    width: 10em;
+}
+.color-map-entry {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+}
+.value-to-color-map {
+    display: flex; 
+    flex-direction: row;
+    overflow-x: auto;
+    margin-bottom: 0.75em; 
+    padding-bottom: 1em;
+}

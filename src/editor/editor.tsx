@@ -129,7 +129,10 @@ export function Editor() {
                     <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
                         onEntityExtraChange={handleEntityExtraChange}
                     />
-                    <StyleCopyDialogue key={stylesHash} entities={entities} stylesToPropagate={stylesToPropagate}
+                    <StyleCopyDialogue key={stylesHash} 
+                        entities={entities} 
+                        entitiesExtra={extra}
+                        stylesToPropagate={stylesToPropagate}
                         visible={stylesDialogue} onClose={() => setStylesDialogue(false)} />
                     <EntytyEditor entity={entity} onStyleCopy={propagateStyles} />
                 </SharedResourcesContext>

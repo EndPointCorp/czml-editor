@@ -1,0 +1,24 @@
+.foldable-color-edit {
+    margin-top: 0.5em;
+}
+
+.foldable-color-edit .value-label {
+    margin-right: 0.25em;
+}
+
+.foldable-color-edit .preview {
+    width: 4em;
+    height: 1.75em;
+
+}
+
+.foldable-color-edit .checker {
+    width: 4em;
+    height: 1.75em;
+    background-image: url('../../assets/checker.png');
+}
+
+.foldable-color-edit .preview-none {
+    line-height: 1.75em;
+    text-align: center;
+}

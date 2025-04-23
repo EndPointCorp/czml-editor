@@ -1,0 +1,32 @@
+.data-table-container table {
+    border-collapse: collapse;
+    border: 1px solid #aaa;
+}
+
+.data-table-container td, .data-table-container th {
+    border: 1px solid #aaa;
+}
+
+.data-table-container.scroll {
+    overflow: scroll;
+    padding-right: 0.75em;
+}
+
+.data-table-container {
+    width: 100%;
+}
+
+.data-styling-controls {
+    width: 100%;
+}
+
+.help-text {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+}
+
+.style-preview {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}

@@ -1,0 +1,13 @@
+.coloring-controls {
+    padding-top: 0.5em;
+    border-top: 1px solid var(--main-white, #ccc);
+}
+
+.coloring-controls.horizontal {
+    display: flex;
+    flex-direction: row;
+}
+
+.coloring-controls.horizontal .coloring-target {
+    width: 30%;
+}

@@ -49,7 +49,7 @@ export function LoadFiles({onLoad}: LoadFilesProps) {
     }, [handleCesiumDS]);
 
     return (
-        <FileInput name="Load Document" 
+        <FileInput name="Open" 
                 accept={".kml, .kmz, .json, .czml, .czmz, .czml.zip, .geojson"} 
                 onFile={fileSelected} />
     );

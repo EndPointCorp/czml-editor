@@ -1,0 +1,33 @@
+.color-ramp-controls {
+    margin-bottom: 1em;
+}
+
+.color-ramp-controls .labled-switch {
+    margin-top: 0.25em;
+}
+
+.ramp-preview {
+    display: inline-block;
+    width: 20em;
+    height: 1.75em;
+}
+
+.ramp-preview span {
+    vertical-align: middle;
+    padding-left: 0.25em ;
+    padding-right: 0.25em ;
+}
+
+.color-inputs {
+    align-items: flex-start;
+}
+
+.color-inputs > .ramp-sample {
+    display: inline-block;
+    margin-right: 1.5em;
+    margin-top: 0.75em;
+}
+
+.gradations-controls input[type="number"] {
+    width: 3em;
+}

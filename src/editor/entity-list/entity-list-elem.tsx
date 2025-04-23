@@ -7,27 +7,12 @@ import cls from "../../misc/cls";
 import "./type-icon.css";
 import "./entity-list-elem.css";
 
-import modelSvg from "../../assets/model.svg";
-import billboardSvg from "../../assets/billboard.svg";
-import labelSvg from "../../assets/label.svg";
-import polygonSvg from "../../assets/polygon.svg";
-import polylineSvg from "../../assets/polyline.svg";
-import folderSvg from "../../assets/folder.svg";
-
 import deleteSvg from "../../assets/delete-stroke.svg";
 import showSvg from "../../assets/show.svg";
 import hideSvg from "../../assets/hide.svg";
 import doExportSvg from "../../assets/export.svg"
 import doNotExportSvg from "../../assets/no_export.svg";
-
-const typeIcons = {
-    billboard: billboardSvg,
-    label: labelSvg,
-    polygon: polygonSvg,
-    polyline: polylineSvg,
-    folder: folderSvg,
-    model: modelSvg
-}
+import { TypeIcon } from "./type-icon";
 
 type EntityListElementProps = {
     entity: Entity;
@@ -51,7 +36,6 @@ export function EntityListElement({entity, isFolder, selectedEntity, entityExtra
 
     const visible = entity.show;
     const doNotExport = entityExtra?.doNotExport;
-
     
     const handleClick = useCallback(() => {
         selectEntity && !isFolder && selectEntity(entity);
@@ -126,16 +110,4 @@ export function EntityListElement({entity, isFolder, selectedEntity, entityExtra
             </span>
         </div>
     );
-}
-
-type TypeIconProps = {
-    type?: string;
-}
-function TypeIcon({type}: TypeIconProps) {
-
-    const icon = type && typeIcons[type as keyof typeof typeIcons];
-
-    return <span class={'entity-type'}>
-        <img alt={type} src={icon} />
-    </span> 
 }

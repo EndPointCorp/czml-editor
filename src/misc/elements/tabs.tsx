@@ -8,25 +8,35 @@ import { ComponentChildren, VNode } from "preact";
 type TabFC = VNode<TabProps>;
 
 export type TabsProps = {
-    children: TabFC[];
+    children: TabFC[] | TabFC;
+    selectedTabInx?: number;
+    onTabChange?: (inx: number, key?: string) => void;
 }
-export function Tabs({children}: TabsProps) {
+export function Tabs({children, selectedTabInx, onTabChange}: TabsProps) {
 
-    const [tabInx, setTabInx] = useState<number>(0);
+    const [tabInx, setTabInx] = useState<number>(selectedTabInx ?? 0);
+    const sInx = selectedTabInx ?? tabInx;
 
     const childrenArray = (Array.isArray(children) ? children : [children]);
 
     const header = childrenArray.map((elem: TabFC, i) => {
         const title = elem.props.title;
-        return <span 
-            class={cls('tab-header', (i === tabInx) && 'selected')} 
-            onClick={() => setTabInx(i)}>
-                {title}
-            </span>
+        const handleTabHeaderClick = () => {
+            selectedTabInx === undefined && setTabInx(i);
+            onTabChange?.(i);
+        };
+
+        return (
+        <span class={cls('tab-header', (i === sInx) && 'selected')} 
+            onClick={handleTabHeaderClick}>
+
+            {title}
+
+        </span>);
     });
 
     const tabs = childrenArray.map((chld, i) => {
-        return <div class={cls('tab', (i === tabInx) && 'selected')}>{chld}</div>
+        return <div class={cls('tab', (i === sInx) && 'selected')}>{chld}</div>
     });
 
     return (

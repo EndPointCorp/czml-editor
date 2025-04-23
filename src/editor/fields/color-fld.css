@@ -58,3 +58,37 @@
     padding-bottom: 0.25em;
     display: flex;
 }
+
+.input-container.color-fld.small {
+    width: 150px;
+    font-size: 0.75em;
+}
+
+.input-container.color-fld.small .preview {
+    width: 3em;
+    height: 3em;
+}
+
+.input-container.color-fld.small .checker {
+    width: 3em;
+    height: 3em;
+}
+
+.input-container.color-fld.small .hue-range {
+    height: 4px;
+    width: 100px;
+}
+
+.input-container.color-fld.small .hue-range::-moz-range-thumb {
+    height: 8px;
+    width: 8px;
+}
+
+.input-container.color-fld.small .hue-range::-webkit-slider-thumb {
+    height: 8px;
+    width: 8px;
+}
+
+.input-container.color-fld.small .color-text-input input {
+    width: 120px;
+}

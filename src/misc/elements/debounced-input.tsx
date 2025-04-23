@@ -7,8 +7,8 @@ type DebouncerT = {
 
 type InputProps = {
     value: string;
-    debounceTimeout: number;
-    debouncedOnChange: (val: string) => void;
+    debounceTimeout?: number;
+    debouncedOnChange?: (val: string) => void;
 }
 export function DebounceInput({value, debounceTimeout, debouncedOnChange, ...rest}: InputProps) {
 
@@ -29,9 +29,9 @@ export function DebounceInput({value, debounceTimeout, debouncedOnChange, ...res
         }
 
         debouncerRef.current.timeout = setTimeout(() => {
-            debouncedOnChange(debouncerRef.current.value);
+            debouncedOnChange?.(debouncerRef.current.value);
             debouncerRef.current.timeout = null;
-        }, debounceTimeout);
+        }, debounceTimeout || 500);
 
     }, [setText, debounceTimeout, debouncedOnChange, debouncerRef]);
 

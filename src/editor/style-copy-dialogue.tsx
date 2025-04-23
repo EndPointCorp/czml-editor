@@ -6,8 +6,10 @@ import { LabledSwitch } from "../misc/elements/labled-switch";
 import { ModalPane } from "../misc/elements/modal-pane";
 import { PropertyField, SupportedGraphic } from "./fields/property-fld";
 import { DistanceDisplayConditionAsVector, getPropertyMeta, NearFarAsVector, PropertyMeta, PropertyTypeEnum, PropertyTypeVector, TypeMetaKey } from "./meta/meta";
+import { EntitiesExtra } from "./editor";
 
 import "./style-copy-dialogue.css"
+import cls from "../misc/cls";
 
 type StylesMap = {
     [key: string]: any
@@ -16,10 +18,11 @@ type StylesMap = {
 type StyleCopyDialogueProps = {
     visible: boolean;
     entities: Entity[];
+    entitiesExtra?: EntitiesExtra;
     stylesToPropagate: StyleChanges | null;
     onClose?: () => void;
 };
-export function StyleCopyDialogue({visible, entities, stylesToPropagate, onClose}: StyleCopyDialogueProps) {
+export function StyleCopyDialogue({visible, entities, stylesToPropagate, entitiesExtra, onClose}: StyleCopyDialogueProps) {
 
     const styleKeys = stylesToPropagate && Object.keys(stylesToPropagate?.style) || [];
     const featureTypes = styleKeys.map(k => k.split('.')[0]).filter((v, i, arr) => arr.indexOf(v) === i);
@@ -59,12 +62,14 @@ export function StyleCopyDialogue({visible, entities, stylesToPropagate, onClose
             }
         }
 
+        const title = e.name || entitiesExtra?.[e.id].namePlaceholder || '';
+
         return (
         <div><input type="checkbox" 
             checked={sel}
             onChange={handleEntSelection}
         />
-            {e.name}
+            <span class={cls(!e.name && 'name-placeholder')}>{title}</span>
         </div>);
     });
 
@@ -122,8 +127,10 @@ export function StyleCopyDialogue({visible, entities, stylesToPropagate, onClose
                         <h4>Entities to apply styles to</h4>
                         
                         <div>
-                            <button class={'size-s'} onClick={() => {setSelectedEntities(applicableEntities.map(e => e.id))}}>Select all</button>
-                            <button class={'size-s'} onClick={() => {setSelectedEntities([])}}>Deselect all</button>
+                            <button class={'size-s'} onClick={() => 
+                                setSelectedEntities(applicableEntities.map(e => e.id))}>Select all</button>
+                            <button class={'size-s'} onClick={() => 
+                                setSelectedEntities([])}>Deselect all</button>
                         </div>
 
                         <div style={{flex: '1, 0, auto', overflowY: 'scroll'}}>

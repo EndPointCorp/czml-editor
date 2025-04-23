@@ -7,16 +7,19 @@ import { GradientSlider } from "../../misc/elements/hue-slider";
 import imgUndefColor from '../../assets/undef-color.svg';
 import imgChecker from '../../assets/checker-s.png';
 import { DebounceInput } from "../../misc/elements/debounced-input";
+import cls from "../../misc/cls";
 
 type HSLA = [h: number, s: number, l: number, a: number];
 
 export type ColorFieldProps = {
     value?: CesiumColor;
-    alpha?: boolean;
     label?: string;
+    alpha?: boolean;
+    nullable?: boolean;
+    className?: string;
     onChange: (value: CesiumColor | undefined) => void;
 };
-export function ColorField({value, label, alpha, onChange}: ColorFieldProps) {
+export function ColorField({value, label, alpha, nullable, className, onChange}: ColorFieldProps) {
 
     const [hsla, setHsla] = useState<HSLA>(toHsla(value));
 
@@ -84,8 +87,10 @@ export function ColorField({value, label, alpha, onChange}: ColorFieldProps) {
     const hex = toColor(hsla).toCssHexString();
     const textValue = value ? hex : 'none';
 
+    const nulSupported = nullable === undefined || !!nullable;
+
     return (
-    <div class="input-container color-fld button-size-s">
+    <div class={cls('input-container', 'color-fld', 'button-size-s', className)}>
         {label && <label class={'label'}>{label}</label>}
 
         <div class={'picker-layout'}>
@@ -119,10 +124,10 @@ export function ColorField({value, label, alpha, onChange}: ColorFieldProps) {
             <DebounceInput key={hex} value={textValue}
                 debounceTimeout={500}
                 debouncedOnChange={handleTextInput} />
-            <button class={'reset-value'} 
+            {nulSupported && <button class={'reset-value'} 
                 onClick={() => {onChange && onChange(undefined)}}>
                     <img src={imgUndefColor}></img>
-            </button>
+            </button>}
         </div>
         
         <div class="underline"></div>
