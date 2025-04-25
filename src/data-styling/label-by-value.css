@@ -1,0 +1,4 @@
+.common-label-styling label {
+    display: inline-block;
+    width: 8em;
+}

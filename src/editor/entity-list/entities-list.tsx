@@ -47,7 +47,10 @@ export function EntitiesList({entities, entity, extra, onEntityExtraChange, sele
                     />}
                     
                 {entities.length > 0 && dataToolsEnabled && 
-                    <button onClick={() => {setShowDataTable(true);}}>Data table</button> }
+                    <button onClick={() => {setShowDataTable(true);}}>
+                        Data Table & Conditional Styling
+                    </button> }
+            
             </div>
             <div class={'scroll-container'}>
                 {$entities}

@@ -1,4 +1,4 @@
-import { ConstantPositionProperty, ConstantProperty, Entity, LabelGraphics } from "cesium";
+import { BoundingSphere, ConstantPositionProperty, ConstantProperty, Entity, LabelGraphics } from "cesium";
 import { LabledSwitch } from "../misc/elements/labled-switch"
 import { useCallback, useState } from "preact/hooks";
 
@@ -17,7 +17,7 @@ export function EntityLabel({entity, onChange}: EntityLabelProps) {
     
             if (!entity.label && show) {
                 if (!entity.position && entity.polygon) {
-                    const center = entity.polygon.hierarchy?.getValue().boundingSphere.center;
+                    const center = BoundingSphere.fromPoints(entity.polygon.hierarchy?.getValue()?.positions).center;
                     entity.position = new ConstantPositionProperty(center);
                 }
                 

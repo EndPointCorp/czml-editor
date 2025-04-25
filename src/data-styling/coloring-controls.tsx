@@ -5,7 +5,7 @@ import { useCallback } from "preact/hooks";
 import cls from "../misc/cls";
 import { FoldableColorEdit } from "../misc/elements/foldable-color-edit";
 
-enum StylingAction {
+export enum StylingAction {
     SET_VALUE = 'SET_VALUE', 
     SET_CONSTANT = 'SET_CONSTANT',
     CLEAR = 'CLEAR',
@@ -20,15 +20,15 @@ const titles = {
 }
 
 export type ColoringConfig = {
-    fillColor: StylingAction;
-    outlineColor: StylingAction;
+    fillAction: StylingAction;
+    outlineAction: StylingAction;
     fillColorConst?: Color;
     outlineColorConst?: Color;
 }
 
 export const defaultColoring: ColoringConfig = {
-    fillColor: StylingAction.SET_VALUE,
-    outlineColor: StylingAction.SET_CONSTANT,
+    fillAction: StylingAction.SET_VALUE,
+    outlineAction: StylingAction.SET_CONSTANT,
     outlineColorConst: Color.fromCssColorString('#05053B'),
 };
 
@@ -40,11 +40,11 @@ type ColoringControlsProps = {
 export function ColoringControls({layoutHorizontal, coloringConfig, onColoringConfigChange}: ColoringControlsProps) {
 
     const handleFillActionChange = useCallback((val: string | number) => {
-        onColoringConfigChange?.({...coloringConfig, fillColor: val as StylingAction});
+        onColoringConfigChange?.({...coloringConfig, fillAction: val as StylingAction});
     }, [coloringConfig, onColoringConfigChange]);
     
     const handleOutlineActionChange = useCallback((val: string | number) => {
-        onColoringConfigChange?.({...coloringConfig, outlineColor: val as StylingAction});
+        onColoringConfigChange?.({...coloringConfig, outlineAction: val as StylingAction});
     }, [coloringConfig, onColoringConfigChange]);
 
     return (
@@ -53,10 +53,10 @@ export function ColoringControls({layoutHorizontal, coloringConfig, onColoringCo
             <label>Fill color: </label>
             <EnumSelect onChange={handleFillActionChange}
                 titles={titles}
-                value={coloringConfig.fillColor} 
+                value={coloringConfig.fillAction} 
                 enumObj={StylingAction}/>
 
-            {coloringConfig.fillColor === StylingAction.SET_CONSTANT && 
+            {coloringConfig.fillAction === StylingAction.SET_CONSTANT && 
             <div>
                 <FoldableColorEdit className={'small'} alpha={true}
                     value={coloringConfig.fillColorConst}
@@ -69,10 +69,10 @@ export function ColoringControls({layoutHorizontal, coloringConfig, onColoringCo
             <label>Outline color: </label>
             <EnumSelect onChange={handleOutlineActionChange}
                 titles={titles}
-                value={coloringConfig.outlineColor} 
+                value={coloringConfig.outlineAction} 
                 enumObj={StylingAction}/>
             
-            {coloringConfig.outlineColor === StylingAction.SET_CONSTANT && 
+            {coloringConfig.outlineAction === StylingAction.SET_CONSTANT && 
             <div>
                 <FoldableColorEdit className={'small'} alpha={false}
                     value={coloringConfig.outlineColorConst}

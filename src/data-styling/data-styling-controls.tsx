@@ -1,14 +1,16 @@
 import "./data-styling-controls.css"
 
-import { Color, Entity } from "cesium";
+import { Entity } from "cesium";
 import { Tab, Tabs } from "../misc/elements/tabs";
 import { ColorByValue } from "./color-by-value";
 import { Subsection } from "../misc/elements/subsection";
+import { Styling } from "./entities-data-table";
+import { LabelByValue } from "./label-by-value";
 
 type DataStylingControlsProps = {
     entities: Entity[];
     propNames: string[];
-    setPreview?: (preview?: Color[]) => void;
+    setPreview?: (preview?: Styling) => void;
 };
 export function DataStylingControls({entities, propNames, setPreview}: DataStylingControlsProps) {
     return (
@@ -22,8 +24,15 @@ export function DataStylingControls({entities, propNames, setPreview}: DataStyli
                     </p>
 
                     <ColorByValue {...{entities, propNames}} 
-                        onPreview={(coloringConfig, preview) => setPreview?.(preview)} />
+                        onPreview={setPreview} />
 
+                </Tab>
+
+                <Tab key={'labels'} title="Labels">
+                    <p class={'help-text'}>
+                        Set Labels and Label text using entities attribute value.
+                    </p>
+                    <LabelByValue {...{entities, propNames}} />
                 </Tab>
 
                 <Tab key={'extrusion'} title="Extrusion and scale">

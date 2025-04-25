@@ -1,12 +1,14 @@
 import "./color-by-value.css";
 
-import { Color, ColorMaterialProperty, ConstantProperty, Entity } from "cesium";
+import { Color, Entity } from "cesium";
 import { useCallback, useMemo, useState } from "preact/hooks";
 import { ColorRamp, ColorRampEditor, sampleRamp } from "../misc/elements/color-ramp-editor";
 import { ColoringConfig, ColoringControls, defaultColoring } from "./coloring-controls";
 import { Tab, Tabs } from "../misc/elements/tabs";
 import { FoldableColorEdit } from "../misc/elements/foldable-color-edit";
 import { HelpText } from "../misc/elements/help-text";
+import { Styling, applyStyles } from "./entities-data-table";
+import { ValueSrcControls } from "./value-src-controls";
 
 type ColorMap = {
     [k: string]: Color
@@ -24,7 +26,7 @@ type ColorByValueProps = {
     entities: Entity[];
     propNames: string[];
     preview?: Color[];
-    onPreview?: (coloringConfig: ColoringConfig, preview?: Color[]) => void;
+    onPreview?: (stylingPreview?: Styling) => void;
 }
 export function ColorByValue({entities, propNames, preview, onPreview}: ColorByValueProps) {
     
@@ -62,8 +64,8 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
             const colorMap: ColorMap = mapUniqueValues(values);
             setValueColorMap(colorMap);
 
-            const preview = values.map(v => colorMap[v]);
-            onPreview?.(coloringConfig, preview);
+            const colorValues = values.map(v => colorMap[v]);
+            onPreview?.({colorValues, coloringConfig});
         }
     }, [entities, property, setValueColorMap, coloringConfig, onPreview]);
 
@@ -73,8 +75,8 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
         }
 
         if (mode === 'distribution') {
-            const preview = mapValuesToRampColors(entities, property, ramp);
-            onPreview?.(coloringConfig, preview);
+            const colorValues = mapValuesToRampColors(entities, property, ramp);
+            onPreview?.({colorValues, coloringConfig});
         }
         else if (mode === 'unique') {
             var colorMap = valueColorMap;
@@ -86,8 +88,8 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
             }
 
             if (colorMap) {
-                const preview = values.map(v => colorMap![v]);
-                onPreview?.(coloringConfig, preview);
+                const colorValues = values.map(v => colorMap![v]);
+                onPreview?.({colorValues, coloringConfig});
             }
         }
     }, [entities, property, mode, ramp, valueColorMap, coloringConfig, setValueColorMap, onPreview]);
@@ -97,10 +99,10 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
             return;
         }
 
-        var colors: Color[] = [];
+        var colorValues: Color[] = [];
 
         if (mode === 'distribution') {
-            colors = mapValuesToRampColors(entities, property, ramp);
+            colorValues = mapValuesToRampColors(entities, property, ramp);
         }
         else if (mode === 'unique') {
             var colorMap = valueColorMap;
@@ -112,44 +114,18 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
             }
 
             if (colorMap) {
-                colors = values.map(v => colorMap![v]);
-                onPreview?.(coloringConfig, preview);
+                colorValues = values.map(v => colorMap![v]);
             }
         }
 
-        entities.forEach((entity: Entity, inx: number) => {
-            if (colors[inx] && entity.polygon) {
-                entity.polygon.material = new ColorMaterialProperty(colors[inx]);
-                entity.polygon.outlineColor = new ConstantProperty(colors[inx].withAlpha(1));
-            }
-        });
-
-        onPreview?.(coloringConfig, undefined);
+        applyStyles(entities, {colorValues, coloringConfig});
+        onPreview?.(undefined);
 
     }, [entities, property, ramp, mode, coloringConfig, onPreview]);
 
     return (<>
 
-        <div class={'source-selection'} style={{marginBottom: "0.75em"}}>
-            <label class={'param-label'}>Attribute: </label>
-
-            <select class={'param-value'} 
-                onChange={(e) => setProperty((e.target as HTMLSelectElement).value)}>
-                {propNames.map(pName => <option key={pName} selected={pName === property}>{pName}</option>)}
-                
-                <option key={"_use_formula"} value={"_use_formula"} 
-                    selected={property === "_use_formula"}>Custom formula</option>
-
-            </select>
-            {property === "_use_formula" && <>
-                <div>
-                    <label class={'param-label'} style={{verticalAlign: "top"}}>Formula: </label>
-                    <textarea class={'param-value'} value={formula}
-                        onChange={e => setFormula((e.target as HTMLInputElement).value)} />
-                </div>
-            </>}
-            
-        </div>
+        <ValueSrcControls {...{property, setProperty, propNames, formula, setFormula}} />
 
         <div>
         <Tabs selectedTabInx={modes.indexOf(mode)} onTabChange={inx => setMode(modes[inx])} >
@@ -261,5 +237,4 @@ function mapValuesToRampColors(entities: Entity[], property: string, ramp: Color
     });
 
 }
-
 
