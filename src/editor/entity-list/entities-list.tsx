@@ -7,8 +7,6 @@ import { useState } from "preact/hooks";
 import { EntitiesDataTable } from "../../data-styling/entities-data-table";
 import { EntitiesExtra, EntityExtra } from "../editor";
 
-const dataToolsEnabled = new URLSearchParams(window.location.search).has('dataTools');
-
 export type EntitiesListProps = {
     entities: Entity[];
     entity: Entity | null;
@@ -46,7 +44,7 @@ export function EntitiesList({entities, entity, extra, onEntityExtraChange, sele
                         onClose={() => {setShowDataTable(false);}} 
                     />}
                     
-                {entities.length > 0 && dataToolsEnabled && 
+                {entities.length > 0 && 
                     <button onClick={() => {setShowDataTable(true);}}>
                         Data Table & Conditional Styling
                     </button> }
