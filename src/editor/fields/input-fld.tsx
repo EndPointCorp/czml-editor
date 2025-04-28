@@ -19,7 +19,7 @@ export function InputField({label, value, className, onChange}: InputFieldProps)
 
     return (
         <div class={cls('input-container', 'generic', className)}>
-            <input type={'text'} class={cls('input', !!value && 'not-empty')} 
+            <input type={'text'} class={cls('input', value !== undefined && 'not-empty')} 
                 id={id} 
                 value={value}
                 onChange={inputHandler}></input>

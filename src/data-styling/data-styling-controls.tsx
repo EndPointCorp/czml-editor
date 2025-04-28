@@ -6,6 +6,7 @@ import { ColorByValue } from "./color-by-value";
 import { Subsection } from "../misc/elements/subsection";
 import { Styling } from "./entities-data-table";
 import { LabelByValue } from "./label-by-value";
+import { ExtrusionByValue } from "./extrusion-by-value";
 
 type DataStylingControlsProps = {
     entities: Entity[];
@@ -22,7 +23,6 @@ export function DataStylingControls({entities, propNames, setPreview}: DataStyli
                     <p class={'help-text'}>
                         Set entities colors by value of an attribute
                     </p>
-
                     <ColorByValue {...{entities, propNames}} 
                         onPreview={setPreview} />
 
@@ -36,7 +36,10 @@ export function DataStylingControls({entities, propNames, setPreview}: DataStyli
                 </Tab>
 
                 <Tab key={'extrusion'} title="Extrusion and scale">
-                    <div></div>
+                    <p class={'help-text'}>
+                        Set Polygon extrusion and or Billboard scale
+                    </p>
+                    <ExtrusionByValue {...{entities, propNames}} />
                 </Tab>
 
             </Tabs>

@@ -31,7 +31,6 @@ type ColorByValueProps = {
 export function ColorByValue({entities, propNames, preview, onPreview}: ColorByValueProps) {
     
     const [property, setProperty] = useState<string>(propNames[0]);
-    const [formula, setFormula] = useState<string>();
 
     const modes = ['distribution', 'unique'] as const;
     const [mode, setMode] = useState<typeof modes[number]>('distribution');
@@ -125,7 +124,7 @@ export function ColorByValue({entities, propNames, preview, onPreview}: ColorByV
 
     return (<>
 
-        <ValueSrcControls {...{property, setProperty, propNames, formula, setFormula}} />
+        <ValueSrcControls {...{property, setProperty, propNames}} />
 
         <div>
         <Tabs selectedTabInx={modes.indexOf(mode)} onTabChange={inx => setMode(modes[inx])} >

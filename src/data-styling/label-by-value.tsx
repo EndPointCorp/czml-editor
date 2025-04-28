@@ -2,33 +2,9 @@ import "./label-by-value.css";
 
 import { BoundingSphere, Color, ConstantPositionProperty, ConstantProperty, Entity, LabelGraphics } from "cesium";
 import { useCallback, useState } from "preact/hooks";
-import { HelpText } from "../misc/elements/help-text";
 import { FoldableColorEdit } from "../misc/elements/foldable-color-edit";
+import { accessorForProperty, ValueAccessor, ValueSrcControls } from "./value-src-controls";
 
-
-export type ValueAccessor = {
-    getValue: (e: Entity) => any;
-    usedProperties?: string[];
-}
-
-// Matches ${variable_name}
-const variableRegex = /\${(.*?)}/g; 
-
-function evaluateVariableString (str: string, attributes: {[k: string]: any}) {
-    let result = str;
-    let match = variableRegex.exec(result);
-    while (match !== null) {
-      const placeholder = match[0];
-      const variableName = match[1];
-      let property = (attributes as any)[variableName];
-      if (property === undefined) {
-        property = "";
-      }
-      result = result.replace(placeholder, property);
-      match = variableRegex.exec(result);
-    }
-    return result;
-};
 
 type LabelStyles = {
     font?: string;
@@ -39,12 +15,11 @@ type LabelStyles = {
 type LabelByValueProps = {
     entities: Entity[];
     propNames: string[];
-    onChange?: (accessor: ValueAccessor) => void;
 };
 export function LabelByValue({entities, propNames}: LabelByValueProps) {
 
     const [property, setProperty] = useState<string>(propNames[0]);
-    const [template, setTemplate] = useState<string>();
+    const [accessor, setAccessor] = useState<ValueAccessor>(accessorForProperty(property))
 
     const [textColor, setTextColor] = useState<Color | undefined>(Color.BLACK);
     const [scale, setScale] = useState<string | undefined>();
@@ -56,15 +31,7 @@ export function LabelByValue({entities, propNames}: LabelByValueProps) {
 
     const handleApply = useCallback(() => {
 
-        const values = entities.map(e => {
-            const props = {
-                ...e.properties?.getValue(),
-                name: e.name
-            };
-
-            return property !== '_use_template' ? 
-                props[property] : evaluateVariableString(template || '', props);
-        });
+        const values = entities.map((e, inx) => accessor.getValue(e, inx));
 
         const labelScale = scale === undefined ? undefined : parseFloat(scale);
         const labelScaleNum = Number.isNaN(labelScale) ? undefined : labelScale;
@@ -77,33 +44,12 @@ export function LabelByValue({entities, propNames}: LabelByValueProps) {
 
         applyLabelStyles(entities, values, styles);
 
-    }, [entities, property, textColor, scale, font, template])
+    }, [entities, accessor, textColor, scale, font])
 
     return (
     <div class={'styling-labels'}>
-        <div class={'source-selection'} style={{marginBottom: "0.75em"}}>
-            <label class={'param-label'}>Attribute: </label>
-
-            <select class={'param-value'} 
-                onChange={(e) => setProperty((e.target as HTMLSelectElement).value)}>
-                {propNames.map(pName => <option key={pName} selected={pName === property}>{pName}</option>)}
-                
-                {<option key={"_use_template"} value={"_use_template"} 
-                    selected={property === "_use_template"}>Custom template</option> }
-
-            </select>
-
-            {property === "_use_template" && 
-            <div>
-                <HelpText unfold={true}>
-                    Use $&#123;attribute_name&#125; for attribute value substitution.
-                </HelpText>
-                <label class={'param-label'} style={{verticalAlign: "top"}}>Template: </label>
-                <textarea class={'param-value'} value={template}
-                    onChange={e => setTemplate?.((e.target as HTMLInputElement).value)} />
-            </div>}
-            
-        </div>
+        <ValueSrcControls {...{property, setProperty, propNames}} 
+            allowFormula={true} onChange={setAccessor} />
 
         <div class={'common-label-styling'}>
             <div>
