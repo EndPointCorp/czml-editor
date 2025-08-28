@@ -21,6 +21,15 @@
   --img-selector-top: 4.75em;
 }
 
+#viewer-tools {
+  position: absolute;
+  top: 0.75em;
+  left: 0.75em;
+
+  background-color: rgb(162, 162, 162);
+  border-radius: 0.25em;
+}
+
 #cesiumContainer .img-selector-toggle {
   width: 4em;
   height: 4em;

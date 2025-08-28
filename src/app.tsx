@@ -37,6 +37,11 @@ export function App() {
         msaaSamples: 1
       });
 
+      const $tools = document.createElement('div');
+      $tools.id = 'viewer-tools';
+
+      vwr.container.querySelector('.cesium-viewer')?.appendChild($tools);
+
       createSelector(vwr);
 
       setViewer(vwr); 
