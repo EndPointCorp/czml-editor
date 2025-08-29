@@ -23,6 +23,7 @@ const drapePolygonAction = {
             }
 
             polygon.height = undefined;
+            polygon.extrudedHeight = undefined;
         }
     },
     enabled: (polygon: SupportedGraphic) => {
