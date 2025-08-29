@@ -34,6 +34,21 @@ const CONTROL_POINT_BILLBOARD_OPTIONS = {
     color: DEFAULT_COLOR
 };
 
+const POLYGON_DEFAULT_OPTIONS = {
+    height: 0,
+    heightReference: Cesium.HeightReference.RELATIVE_TO_GROUND,
+    material: new Cesium.ColorMaterialProperty(DEFAULT_COLOR.withAlpha(0.3)),
+    outline: true,
+    outlineColor: DEFAULT_COLOR,
+    outlineWidth: 2,
+};
+
+const POLYLINE_DEFAULT_OPTIONS = {
+    clampToGround: true,
+    width: 3,
+    material: DEFAULT_COLOR,
+};
+
 type GeometryType = "polygon" | "polyline";
 type GeometryProperty = "positions" | "hierarchy";
 
@@ -72,6 +87,8 @@ export default class GeometryEditor {
 
     
     constructor(viewer: Cesium.Viewer) {
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+
         this.viewer = viewer;
         this.createMode = false;
 
@@ -165,10 +182,13 @@ export default class GeometryEditor {
         );
 
         if (this._type === 'polyline') {
-            return positions;
+            const coords = positions.length >= 2 ? positions : [];
+            return coords;
         }
+
         if (this._type === 'polygon') {
-            return new Cesium.PolygonHierarchy(positions);
+            const coords = positions.length >= 3 ? positions : [];
+            return new Cesium.PolygonHierarchy(coords);
         }
     }
 
@@ -189,6 +209,8 @@ export default class GeometryEditor {
         if (this._type === 'polygon' && prev) {
             this._addMiddlePoint(prev, this._controlPoints[0]);
         }
+
+        console.log('_createMiddlePoints', this._middlePoints.map(mp => mp.position?.getValue()));
     }
 
     save() {
@@ -197,7 +219,9 @@ export default class GeometryEditor {
         // Apply changes to entity
 
         // @ts-ignore
-        this.entity[this._type][this._entityGeometryProperty] = new Cesium.ConstantProperty(this._geometryCallback());
+        this.entity[this._type][this._entityGeometryProperty] = 
+            new Cesium.ConstantProperty(this._geometryCallback());
+
         this.enablePick();
         this.reset();
 
@@ -262,23 +286,11 @@ export default class GeometryEditor {
     _setTypeOptions() {
         if (this._type === 'polyline') {
             this._entityGeometryProperty = 'positions';
-
-            this.entityOptions = {
-                clampToGround: true,
-                width: 3,
-                material: DEFAULT_COLOR,
-            };
+            this.entityOptions = POLYLINE_DEFAULT_OPTIONS;
         }
         else if (this._type === 'polygon') {
             this._entityGeometryProperty = 'hierarchy';
-
-            this.entityOptions = {
-                height: 0,
-                material: new Cesium.ColorMaterialProperty(DEFAULT_COLOR.withAlpha(0.3)),
-                outline: true,
-                outlineColor: DEFAULT_COLOR,
-                outlineWidth: 2,
-            };
+            this.entityOptions = POLYGON_DEFAULT_OPTIONS;
         }
     }
 
