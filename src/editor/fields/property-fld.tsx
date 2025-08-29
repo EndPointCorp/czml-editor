@@ -10,6 +10,7 @@ import { InputField } from './input-fld';
 import { VectorField } from './vector-fld';
 
 import "./property-fld.css";
+import { ActionField } from "./action-fld";
 
 export type SupportedGraphic = PolygonGraphics | PolylineGraphics | BillboardGraphics | LabelGraphics | ModelGraphics;
 
@@ -120,6 +121,9 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
       
       case 'image-url':
         return <ImageUrlField label={label} value={value} onChange={changeHandler}/>;
+      
+      case 'action':
+        return <ActionField label={label} subject={subject} actionId={metaProperty.action} />;
 
       default:
         // @ts-ignore ignore, unreachable at the moment

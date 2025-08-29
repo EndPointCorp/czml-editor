@@ -1,4 +1,4 @@
-import { DistanceDisplayCondition, NearFarScalar } from "cesium";
+import { DistanceDisplayCondition, Entity, NearFarScalar } from "cesium";
 import { billboardMetaData } from "./billboard-meta";
 import { labelMetadata } from "./label-meta";
 import { polylineMetaData } from "./polyline-meta";
@@ -16,7 +16,8 @@ export type PropertyType = {
 | PropertyTypeEnum 
 | PropertyTypeVector
 | MaterialType
-| ColorType;
+| ColorType
+| PropertyTypeAction;
 
 export type ColorType = {
     type: 'color';
@@ -39,6 +40,13 @@ export type PropertyTypeVector = {
     size: number;
     targetClass: Constructor<any>;
     componentNames?: string[];
+};
+
+// I want to keep metadata simple and serializable
+// that's why I don't want to put actual Callback or an Object as action
+export type PropertyTypeAction = {
+    type: 'action';
+    action: string;
 };
 
 export const DistanceDisplayConditionAsVector: PropertyTypeVector = {

@@ -2,6 +2,7 @@ import { ClassificationType, HeightReference } from "cesium";
 import { PropertyMeta } from "./meta";
 
 const geomProperties: PropertyMeta[] = [
+    {name: 'Drape polygon', type: 'action', action: 'drape-polygon'},
     {name: 'height', type: 'number'}, 
     {name: 'extrudedHeight', type: 'number'}, 
     {name: 'heightReference', type: 'enum', enum: HeightReference},
