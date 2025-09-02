@@ -39,6 +39,19 @@ const HelpContent = () =>
         None the less for now the editor UI works mostly as Entities represents a single
         type visual <i>Feature</i>.
     </p>
+
+    <h4>Time-sampled properties and animations</h4>
+    <p>
+        CZML supports time interpolated values for properties, for instance you can animate object position.
+        Current version doesn't have UI to support editing "animated" properties, but it still should be
+        possible to edit constant properties and re-export entities with animated properties.
+    </p>
+
+    <h4>Old version</h4>
+    <p>
+        This is a new version written with preact, vite and modern version of Cesiumjs.
+        You can use previous version at <a>http://visionport.com/old-czml-kml-editor</a>
+    </p>
 </div>
 
 export default HelpContent;
