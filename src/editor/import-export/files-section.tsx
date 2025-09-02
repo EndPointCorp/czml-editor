@@ -5,6 +5,7 @@ import { ExportFiles } from "./export-files";
 import { Section } from "../../misc/elements/section";
 import { useEffect, useState } from "preact/hooks";
 import { EntitiesExtra } from "../editor";
+import HelpDialog from "./help-dialog";
 
 export type CesiumDataSource = CzmlDataSource | KmlDataSource | GeoJsonDataSource;
 
@@ -32,6 +33,7 @@ export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionPr
 
     return (
         <Section header={'Import / Export'} className={'upload-section'}>
+            <HelpDialog />
             <LoadFiles onLoad={onLoad} />
             <ExportFiles entities={entities} 
                 entitiesExtra={entitiesExtra} 
@@ -39,4 +41,6 @@ export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionPr
         </Section>
     );
 }
+
+
 

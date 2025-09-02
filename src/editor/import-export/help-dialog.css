@@ -1,0 +1,19 @@
+.floating-w {
+    position: relative;
+}
+
+.floating-rt {
+    position: absolute;
+    right: 0.25em;
+}
+
+.help-content h3, .help-content h4 {
+    background-color: unset;
+}
+
+.help-content {
+    margin-top: 0.75em;
+
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
