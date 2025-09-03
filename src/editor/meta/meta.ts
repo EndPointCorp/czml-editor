@@ -1,4 +1,4 @@
-import { DistanceDisplayCondition, Entity, NearFarScalar } from "cesium";
+import { DistanceDisplayCondition, NearFarScalar } from "cesium";
 import { billboardMetaData } from "./billboard-meta";
 import { labelMetadata } from "./label-meta";
 import { polylineMetaData } from "./polyline-meta";
