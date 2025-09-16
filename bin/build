@@ -1,0 +1,41 @@
+#!/bin/bash
+
+Help() {
+  echo "Usage: build [-r]"
+  echo ""
+	echo "-r           recreate container without rebuilding image"
+}
+
+set -euo pipefail
+trap 'exit 1' INT
+
+run_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )
+cd "$run_dir"/.. || exit 1
+
+NO_BUILD=
+
+while getopts ":rh" option; do
+  case $option in
+    h) # Show help
+      Help
+	  exit;;
+    r) # Recreate the same image instead of building a new one
+      NO_BUILD=true
+    ;;
+  esac
+done
+
+DIST_DIR=/home/visionport/live/external/czml-editor/dist/
+
+[[ -z "$NO_BUILD" ]] && podman build -t czml-editor .
+
+# Create a temporary container from the image
+CONTAINER_ID=$(podman create czml-editor)
+
+# Copy the files from the container to your host machine
+mkdir -p tmp
+podman cp $CONTAINER_ID:/usr/src/app/dist tmp
+rm -rf $DIST_DIR && mv tmp/dist $DIST_DIR
+
+# Remove the temporary container
+podman rm $CONTAINER_ID
