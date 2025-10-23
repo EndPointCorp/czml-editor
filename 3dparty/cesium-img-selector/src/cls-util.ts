@@ -1,1 +1,0 @@
-export const cls = (classes: (string|null|undefined|false)[]) => classes.filter(cn => !!cn).join(' ');

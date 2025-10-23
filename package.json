@@ -14,6 +14,7 @@
     "deploy": "gh-pages --nojekyll -d dist"
   },
   "dependencies": {
+    "@fast-csv/parse": "^5.0.5",
     "cesium": "^1.126.0",
     "cesium-img-selector": "file:3dparty/cesium-img-selector",
     "html-format": "^1.1.7",
