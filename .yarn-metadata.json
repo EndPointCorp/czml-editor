@@ -1,0 +1,41 @@
+{
+  "manifest": {
+    "name": "cesium-img-selector",
+    "version": "1.0.0",
+    "files": [
+      "dist"
+    ],
+    "main": "dist/img-selector.js",
+    "module": "dist/img-selector.mjs",
+    "types": "dist/ImgSelector.d.ts",
+    "license": "MIT",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc && vite build",
+      "preview": "vite preview"
+    },
+    "dependencies": {
+      "preact": "^10.19.6"
+    },
+    "devDependencies": {
+      "@babel/cli": "^7.24.7",
+      "@babel/core": "^7.24.7",
+      "@babel/plugin-transform-nullish-coalescing-operator": "^7.24.7",
+      "@preact/preset-vite": "^2.8.2",
+      "typescript": "^5.2.2",
+      "vite": "^5.2.0",
+      "vite-plugin-dts": "^3.7.3"
+    },
+    "_registry": "npm",
+    "_loc": "/home/dkiselev/.cache/yarn/v6/npm-img-selector-1.0.0-bc74790e-525f-4f52-8701-5d80475031aa-1732140052698/node_modules/img-selector/package.json"
+  },
+  "artifacts": [],
+  "remote": {
+    "type": "copy",
+    "registry": "npm",
+    "hash": "df26b2d2-0919-4185-8482-d50c7d72c3c3-1733263836959",
+    "reference": "/opt/ep/cesium-img-editor/extra/cesium-img-selector"
+  },
+  "registry": "npm",
+  "hash": "df26b2d2-0919-4185-8482-d50c7d72c3c3-1733263836959"
+}
