@@ -35,6 +35,7 @@ export class CreateEntityByClickController {
     };
 
     modelUri?: Resource | string | null = null;
+    modelName?: string;
 
     newEntityEvent = new Event<(entity: Entity) => void>();
 
@@ -64,6 +65,7 @@ export class CreateEntityByClickController {
             }
             
             this.modelUri = null;
+            this.modelName = undefined;
         }
         else if (this.inputMode === CreateEntityInputMode.label) {
             this.inputMode = null;
@@ -100,8 +102,10 @@ export class CreateEntityByClickController {
     
     createModel(position: Cartesian3) {
         const uri = this.modelUri;
+        const name = this.modelName;
         
         return new Entity({
+            name,
             position: position,
             model: {
                 uri,

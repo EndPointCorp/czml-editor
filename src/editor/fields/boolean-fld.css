@@ -1,4 +1,4 @@
-.boolean-fld .switch {
+.boolean-fld .ui-toggle {
     font-size: 14px;
     margin-left: 250px;
     top: -0.6em;
@@ -14,4 +14,3 @@
 .boolean-fld .underline {
     transform: scaleX(1);
 }
-

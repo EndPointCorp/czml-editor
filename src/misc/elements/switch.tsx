@@ -6,9 +6,9 @@ export type SwitchProps = {
 }
 export default function Switch ({checked, onChange}: SwitchProps) {
     return (
-        <label className="switch">
+        <label class="ui-toggle">
           <input type="checkbox" checked={checked} onChange={onChange} />
-          <span className="slider" />
+          <span class="ui-toggle-track" />
         </label>
     );
-  }
+}

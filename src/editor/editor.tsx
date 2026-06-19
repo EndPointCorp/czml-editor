@@ -16,6 +16,7 @@ import { CreateEntitySection } from './create/create-section';
 import { FilesSection } from './import-export/files-section';
 import { types } from './meta/meta';
 import { StyleCopyDialogue } from './style-copy-dialogue';
+import { applyModelEntityNames } from '../czml-ext/model-name';
 
 
 export type EditorContextT = {
@@ -77,6 +78,7 @@ export function Editor() {
     }, [setSelectedEntity]);
 
     const handleDsLoad = useCallback((newEntities: Entity[]) => {
+        applyModelEntityNames(newEntities);
         const allEntities = [...entities, ...newEntities];
         
         updateExtra(extra, allEntities);
@@ -104,6 +106,7 @@ export function Editor() {
     const onEntityCreated = useCallback((newEntity: Entity) => {
         console.log('Entity created', newEntity);
 
+        applyModelEntityNames([newEntity]);
         const allEntities = [...entities, newEntity];
 
         updateExtra(extra, allEntities);

@@ -42,13 +42,13 @@ export async function exportModels(entities: Entity[]) {
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['model', 'uri']);
 
-        if (resource) {
-            const ext = resource.extension;
+        if (resource && !exportMap[resource.url]) {
+            const ext = resource.extension || 'glb';
         
             const urlPathname = (resource.isBlobUri || resource.isDataUri) ? undefined : new URL(resource.url).pathname;
-            const urlFileName = urlPathname?.match(/\/([\w\d\.\-]+)$/i)?.[1];
+            const urlFileName = urlPathname?.match(/\/([\w\d.\-]+)$/i)?.[1];
         
-            const name = urlFileName || `model${counter++}.${ext}`;
+            const name = urlFileName || `model-${counter++}.${ext}`;
 
             try {
                 const targetPath = name;
@@ -56,12 +56,9 @@ export async function exportModels(entities: Entity[]) {
                 if (blob) {
                     exportMap[resource.url] = {targetPath, model: blob};
                 }
-                else {
-                    // TODO: Error reporting
-                }
             }
             catch {
-                // TODO: Error reporting
+                console.warn('failed to export model', resource.url);
             }
         }
     }

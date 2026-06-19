@@ -1,8 +1,8 @@
-.labled-switch label:not(.switch) {
+.labled-switch label:not(.ui-toggle) {
     margin-right: 0.5em;
 }
 
-.labled-switch .switch {
+.labled-switch .ui-toggle {
     font-size: 0.75em;
     vertical-align: middle;
 }

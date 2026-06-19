@@ -3,6 +3,7 @@ import { useCallback, useState } from "preact/hooks";
 
 import "./export-files.css"
 import { exportAsCzml } from "../../czml-ext/export-czml";
+import { getExportBaseName } from "../../czml-ext/export-filename";
 import { createKmlModelCallback, supplementKmlExternalFiles } from "../../czml-ext/export-kml-assets";
 import { normalizeZipPath } from "../../czml-ext/zip-asset-resolver";
 
@@ -41,6 +42,8 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                 { ...result.externalFiles },
             );
 
+            const baseName = getExportBaseName(entitiesToExport);
+
             if (archived) {
                 const zipWriter = new ZipWriter(new BlobWriter("application/vnd.google-earth.kmz"));
                 await zipWriter.add('doc.kml', new TextReader(supplemented.kml));
@@ -49,12 +52,12 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     await zipWriter.add(name, file.stream());
                 }
 
-                downloadBlobFile(await zipWriter.close(), 'document.kmz');
+                downloadBlobFile(await zipWriter.close(), `${baseName}.kmz`);
             }
             else {
                 const mime = 'application/vnd.google-earth.kml+xml';
                 const kmlDataLink = `data:${mime};charset=utf-8,` + encodeURIComponent(supplemented.kml);
-                downloadAsFile(kmlDataLink, 'document.kml');
+                downloadAsFile(kmlDataLink, `${baseName}.kml`);
             }
         }
         catch (e) {
@@ -73,6 +76,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
         
         try {
             const czmlText = JSON.stringify(czml);
+            const baseName = getExportBaseName(entitiesToExport);
             
             if (archived) {
                 const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
@@ -105,11 +109,11 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     }
                 }
         
-                downloadBlobFile(await zipWriter.close(), 'document.czml.zip');
+                downloadBlobFile(await zipWriter.close(), `${baseName}.czml.zip`);
             }
             else {
                 const czmlData = 'data:text/json;charset=utf-8,' + encodeURIComponent(czmlText);
-                downloadAsFile(czmlData, 'document.czml');
+                downloadAsFile(czmlData, `${baseName}.czml`);
             }
         }
         catch(e) {
@@ -124,7 +128,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             <button onClick={() => {setExportDialogueOpen(true)}}>Export</button>
             <ModalPane visible={exportDialogueOpen}>
                 <div>
-                    <div><button onClick={() => {setExportDialogueOpen(false)}}>Close Me Now</button></div>
+                    <div><button onClick={() => {setExportDialogueOpen(false)}}>Close</button></div>
                     
                     <h4>Export as CZML</h4>
                     <div>

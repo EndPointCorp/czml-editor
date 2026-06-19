@@ -2,6 +2,7 @@ import { useCallback, useContext} from "preact/hooks";
 import { CreateEntityInputMode } from "../../geometry-editor/input-new-entity";
 import { FileInput } from "../../misc/elements/file-input";
 import { EditorContext } from "../editor";
+import { modelNameFromFileName } from "../../czml-ext/model-name";
 
 type CreateModelProps = {
     active: boolean;
@@ -19,6 +20,7 @@ export function CreateModel({active, disabled, setActiveType}: CreateModelProps)
         if (controller) {
             setActiveType(CreateEntityInputMode.model);
             controller.modelUri = URL.createObjectURL(file);
+            controller.modelName = modelNameFromFileName(file.name);
         }
     }, [controller, setActiveType]);
     

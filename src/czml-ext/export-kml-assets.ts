@@ -28,7 +28,7 @@ export function createKmlModelCallback(): exportKmlModelCallback {
         const urlPathname = (resource.isBlobUri || resource.isDataUri)
             ? undefined
             : new URL(resource.url).pathname;
-        const urlFileName = urlPathname?.match(/\/([\w\d\.\-]+)$/i)?.[1];
+        const urlFileName = urlPathname?.match(/\/([\w\d.\-]+)$/i)?.[1];
         const ext = resource.extension || 'glb';
         const filename = urlFileName || `model-${counter++}.${ext}`;
 
@@ -70,7 +70,7 @@ export async function supplementKmlExternalFiles(
         const urlPathname = (resource.isBlobUri || resource.isDataUri)
             ? undefined
             : new URL(resource.url).pathname;
-        const urlFileName = urlPathname?.match(/\/([\w\d\.\-]+)$/i)?.[1];
+        const urlFileName = urlPathname?.match(/\/([\w\d.\-]+)$/i)?.[1];
         const ext = resource.extension || 'png';
         const filename = urlFileName || `image-${counter++}.${ext}`;
 
