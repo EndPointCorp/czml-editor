@@ -1,5 +1,6 @@
 import * as zip from "@zip.js/zip.js"
 import { CzmlDataSource, Resource } from "cesium";
+import { lookupZipAsset, rewriteTilesetEntries } from "./zip-asset-resolver";
 
 export class CzmlDataSourceExtension extends CzmlDataSource {
     static __load = CzmlDataSource.load;
@@ -22,22 +23,22 @@ export class CzmlDataSourceExtension extends CzmlDataSource {
                         entriesMap.set(entry.filename, blobURL);
                     }
                 }
+
+                await rewriteTilesetEntries(entriesMap);
                     
                 const documentEntry = entries.find(e => /\.czml$/i.test(e.filename));
                 if (documentEntry) {
                     const documentBlobUrl = entriesMap.get(documentEntry?.filename);
 
                     if (documentBlobUrl) {
+                        const documentPath = documentEntry.filename;
                         const promise = CzmlDataSourceExtension.__load(new Resource({
                             url: documentBlobUrl,
                             proxy: {
                                 getURL: url => {
-                                    if (/^blob:/.test(url)) {
-                                        const blobId = /^blob:\/+(.+)/i.exec(url)?.[1];
-                                        if (blobId) {
-                                            const blobUrl = entriesMap.get(blobId);
-                                            return blobUrl ? blobUrl : url;
-                                        }
+                                    const resolved = lookupZipAsset(url, documentPath, entriesMap);
+                                    if (resolved) {
+                                        return resolved;
                                     }
                                     console.warn('Url not found inside czmz', url);
                                     return url;
@@ -104,5 +105,4 @@ async function fetchBlob(czml: Resource | Blob | string | any) {
     const resource = new Resource(czml);
     return await resource.fetchBlob();
 }
-
 

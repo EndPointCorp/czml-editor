@@ -3,6 +3,7 @@ import { useCallback, useState } from "preact/hooks";
 
 import "./export-files.css"
 import { exportAsCzml } from "../../czml-ext/export-czml";
+import { normalizeZipPath } from "../../czml-ext/zip-asset-resolver";
 
 import { ZipWriter, BlobWriter, TextReader } from "@zip.js/zip.js"
 import { ModalPane } from "../../misc/elements/modal-pane";
@@ -54,13 +55,13 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
     }, [entities, entitiesExtra, onExport]);
 
     const handleDownloadCZML = useCallback(async (archived?: boolean) => {
-        const options = { exportImages: archived, exportModels: archived };
+        const options = { exportImages: archived, exportModels: archived, exportTilesets: archived };
 
         const entitiesToExport = entities
             .filter(e => !(entitiesExtra?.[e.id].doNotExport))
             .filter(e => !((e.entityCollection?.owner as any).__ignore));
 
-        const { czml, exportedImages } = await exportAsCzml(entitiesToExport, options);
+        const { czml, exportedImages, exportedModels, exportedTilesets } = await exportAsCzml(entitiesToExport, options);
         
         try {
             const czmlText = JSON.stringify(czml);
@@ -75,6 +76,24 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                         canvas.getContext('2d')?.drawImage(img, 0, 0);
                         const blob = await canvas.convertToBlob();
                         await zipWriter.add(targetPath, blob.stream())
+                    }
+                }
+
+                if (exportedModels) {
+                    for (const { targetPath, model } of Object.values(exportedModels)) {
+                        await zipWriter.add(targetPath, model.stream());
+                    }
+                }
+
+                if (exportedTilesets) {
+                    for (const { targetPath, files } of Object.values(exportedTilesets)) {
+                        const tilesetDir = targetPath.replace(/\/tileset\.json$/i, '');
+                        for (const [relPath, blob] of Object.entries(files)) {
+                            const zipPath = tilesetDir
+                                ? normalizeZipPath(tilesetDir, relPath)
+                                : relPath;
+                            await zipWriter.add(zipPath, blob.stream());
+                        }
                     }
                 }
         

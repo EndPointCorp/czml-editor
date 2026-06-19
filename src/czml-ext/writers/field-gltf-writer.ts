@@ -1,7 +1,17 @@
-import { Entity, Property } from "cesium";
+import { Entity, Property, Resource } from "cesium";
 import { getResourceByPath } from "./field-image-writer";
 import { WriterContext } from "../export-czml";
 import { writeScalar } from "./field-writers";
+
+function toResourceUrl(val: unknown): string | undefined {
+    if (typeof val === 'string') {
+        return val;
+    }
+    if (val instanceof Resource) {
+        return val.url;
+    }
+    return undefined;
+}
 
 export type ModelExport = {
     [url: string]: {
@@ -14,7 +24,8 @@ export function writeGltf(prop: Property, ctx: WriterContext) {
     const val = writeScalar(prop, ctx);
     if (val === undefined || val === null || val.reference) return val;
 
-    const exported = ctx.exportedModels?.[val];
+    const url = toResourceUrl(val);
+    const exported = url && ctx.exportedModels?.[url];
     if (exported) {
         return exported.targetPath;
     }

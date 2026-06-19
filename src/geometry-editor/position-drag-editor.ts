@@ -43,8 +43,11 @@ export function attachController(controller: PositionDragController, entity: Ent
     }
     
     if (getter && setter) {
-        return controller.attachToEntity(entity, getter, setter, onDragEnd);
+        controller.attachToEntity(entity, getter, setter, onDragEnd);
+        return true;
     }
+
+    return false;
 }
 
 
@@ -61,6 +64,7 @@ type PositionDragControllerState = {
     pick: (pick: any) => boolean;
     getEntityPosition: () => Cartographic;
     newPosition: (newPosition: Cartographic, ...lonlat: [number, number]) => void;
+    getter: PositionGetter;
 };
 
 export class PositionDragController {
@@ -92,7 +96,7 @@ export class PositionDragController {
         // Ignore clicks outside
         if (this.state && this.state.picked) {
             this.state.onDragEnd && this.state.onDragEnd();
-            this.reset();
+            this.endDrag();
         }
     }
 
@@ -145,8 +149,9 @@ export class PositionDragController {
             pick: (pick: any) => {
                 return pick.id === entity;
             },
+            getter,
             getEntityPosition: function() {
-                return this.initialPosition;
+                return Cartographic.fromCartesian(this.getter());
             },
             newPosition: function(newPosition: Cartographic, ...lonlat: [number, number]) {
                 const cartesian = Cartographic.toCartesian(newPosition);
@@ -165,6 +170,15 @@ export class PositionDragController {
     
     enableDefaultControls() {
         this.viewer.scene.screenSpaceCameraController.enableInputs = true;
+    }
+
+    endDrag() {
+        if (this.state) {
+            this.state.picked = false;
+            this.state.mouseDownPosition = null;
+            this.state.mouseDownEntityPosition = null;
+        }
+        this.enableDefaultControls();
     }
 
     reset() {

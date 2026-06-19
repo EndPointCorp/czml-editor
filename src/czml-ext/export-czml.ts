@@ -1,5 +1,6 @@
 import { DataSource, DataSourceClock, Entity } from "cesium";
 import { exportModels as exportModelsF, ModelExport } from "./writers/field-gltf-writer";
+import { exportTilesets as exportTilesetsF, TilesetExport } from "./writers/field-tileset-writer";
 import { buildImagesMap, exportImages as exportImagesF, getResourceByPath, ImageExport, ResourcesMap } from "./writers/field-image-writer";
 import { writeOrientation, writePosition, writePropertyBag, writeScalar, writeTimeIntervalCollectionValue } from "./writers/field-writers";
 import { writeLabel } from "./writers/graphics/label-writer";
@@ -38,6 +39,7 @@ export type WriterContext = {
     
     exportedImages?: ImageExport;
     exportedModels?: ModelExport;
+    exportedTilesets?: TilesetExport;
 }
 
 type DocumentPacketCzml = {
@@ -54,6 +56,7 @@ export type ExportOptions = {
     exportImagesMaxDimensions?: {width: number, height: number}
     forceFetchImages?: boolean;
     exportModels?: boolean;
+    exportTilesets?: boolean;
     onFailedToEncode?: (entity: Entity, path: string[], val: any) => void;
 }
 export async function exportAsCzml(entities: Entity[], options?: ExportOptions) {
@@ -74,6 +77,10 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
 
     if (options.exportModels) {
         ctx.exportedModels = await exportModelsF(entities);
+    }
+
+    if (options.exportTilesets) {
+        ctx.exportedTilesets = await exportTilesetsF(entities);
     }
 
     const docPacket = options.documentPacket || {"id":"document", "version":"1.0"};
@@ -103,6 +110,7 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
         czml: packets,
         exportedImages: ctx.exportedImages,
         exportedModels: ctx.exportedModels,
+        exportedTilesets: ctx.exportedTilesets,
     };
 }
 
