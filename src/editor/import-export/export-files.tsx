@@ -3,6 +3,7 @@ import { useCallback, useState } from "preact/hooks";
 
 import "./export-files.css"
 import { exportAsCzml } from "../../czml-ext/export-czml";
+import { createKmlModelCallback, supplementKmlExternalFiles } from "../../czml-ext/export-kml-assets";
 import { normalizeZipPath } from "../../czml-ext/zip-asset-resolver";
 
 import { ZipWriter, BlobWriter, TextReader } from "@zip.js/zip.js"
@@ -19,39 +20,46 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
 
     const [exportDialogueOpen, setExportDialogueOpen] = useState<boolean>(false);
 
-    const handleDownloadKML = useCallback((archived?: boolean) => {
-        const ds = new CustomDataSource("export");
-        
-        entities
+    const handleDownloadKML = useCallback(async (archived?: boolean) => {
+        const entitiesToExport = entities
             .filter(e => !(entitiesExtra?.[e.id].doNotExport))
-            .filter(e => !((e.entityCollection?.owner as any).__ignore))
-            .forEach(e => ds.entities.add(e));
-        
-        exportKml({ entities: ds.entities, kmz: archived }).then(async result => {
+            .filter(e => !((e.entityCollection?.owner as any).__ignore));
 
-            const kmlText = (result as exportKmlResultKml).kml;
+        const ds = new CustomDataSource("export");
+        entitiesToExport.forEach(e => ds.entities.add(e));
+
+        try {
+            const result = await exportKml({
+                entities: ds.entities,
+                kmz: false,
+                modelCallback: createKmlModelCallback(),
+            }) as exportKmlResultKml;
+
+            const supplemented = await supplementKmlExternalFiles(
+                entitiesToExport,
+                result.kml,
+                { ...result.externalFiles },
+            );
 
             if (archived) {
-                if (archived) {
-                    const zipWriter = new ZipWriter(new BlobWriter("application/vnd.google-earth.kmz"));
-                    await zipWriter.add('document.kml', new TextReader(kmlText));
-            
-                    if ((result as exportKmlResultKml).externalFiles) {
-                        for (const [name, file] of Object.entries((result as exportKmlResultKml).externalFiles)) {
-                            await zipWriter.add(name, file.stream());
-                        }
-                    }
-            
-                    downloadBlobFile(await zipWriter.close(), 'document.czml.zip');
+                const zipWriter = new ZipWriter(new BlobWriter("application/vnd.google-earth.kmz"));
+                await zipWriter.add('doc.kml', new TextReader(supplemented.kml));
+
+                for (const [name, file] of Object.entries(supplemented.externalFiles)) {
+                    await zipWriter.add(name, file.stream());
                 }
 
+                downloadBlobFile(await zipWriter.close(), 'document.kmz');
             }
             else {
                 const mime = 'application/vnd.google-earth.kml+xml';
-                const kmlDataLink = `data:${mime};charset=utf-8,` + encodeURIComponent(kmlText);
+                const kmlDataLink = `data:${mime};charset=utf-8,` + encodeURIComponent(supplemented.kml);
                 downloadAsFile(kmlDataLink, 'document.kml');
             }
-        });
+        }
+        catch (e) {
+            console.error(e);
+        }
     }, [entities, entitiesExtra, onExport]);
 
     const handleDownloadCZML = useCallback(async (archived?: boolean) => {
@@ -116,7 +124,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             <button onClick={() => {setExportDialogueOpen(true)}}>Export</button>
             <ModalPane visible={exportDialogueOpen}>
                 <div>
-                    <div><button onClick={() => {setExportDialogueOpen(false)}}>Close</button></div>
+                    <div><button onClick={() => {setExportDialogueOpen(false)}}>Close Me Now</button></div>
                     
                     <h4>Export as CZML</h4>
                     <div>

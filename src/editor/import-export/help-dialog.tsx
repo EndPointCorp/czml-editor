@@ -11,14 +11,14 @@ export default function HelpDialog() {
     return (<>
         <div className={'floating-w'}>
             <div className={'floating-rt'}>
-                <button onClick={() => setVisible(!visible)}>Help</button>
+                <button onClick={() => setVisible(!visible)}>Help Me Now</button>
             </div>
         </div>
 
         <ModalPane visible={visible} className="help-pane">
             <div class={'actions'}>
                 <button className={'size-s'} 
-                    onClick={() => setVisible(false)}>Close</button>
+                    onClick={() => setVisible(false)}>Close Me Now</button>
             </div>
 
             <HelpContent />
