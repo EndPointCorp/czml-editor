@@ -2,7 +2,7 @@ import * as zip from "@zip.js/zip.js";
 import { Entity } from "cesium";
 import { modelNameFromFileName } from "./model-name";
 import { getResourceByPath } from "./writers/field-image-writer";
-import { registerTilesetSource, getTilesetSource, TilesetSourceFile } from "./tileset-source-registry";
+import { registerTilesetSource, findTilesetSource, TilesetSourceFile } from "./tileset-source-registry";
 import { rewriteTilesetEntries } from "./zip-asset-resolver";
 
 export type TilesetFromZip = {
@@ -106,11 +106,12 @@ export async function tilesetFromZip(
         ? modelNameFromFileName(tilesetPath.split('/')[0])
         : modelNameFromFileName(name);
 
-    registerTilesetSource(rootUri, {
+    const source = {
         mainPath: mainPathForTileset(tilesetPath, name),
         files: filesRelativeToTilesetRoot(archive.blobs, tilesetPath),
         rootUri,
-    });
+    };
+    registerTilesetSource(source, [tilesetPath]);
 
     return { uri: rootUri, name: displayName };
 }
@@ -122,7 +123,7 @@ export function registerTilesetsFromArchive(entities: Entity[], archive: ZipArch
             continue;
         }
 
-        if (getTilesetSource(resource.url)) {
+        if (findTilesetSource(resource.url)) {
             continue;
         }
 
@@ -139,13 +140,28 @@ export function registerTilesetsFromArchive(entities: Entity[], archive: ZipArch
         }
 
         if (!tilesetPath) {
+            for (const path of archive.blobs.keys()) {
+                if (!/\/tileset\.json$/i.test(path)) {
+                    continue;
+                }
+                const blobUrl = archive.blobUrls.get(path);
+                if (blobUrl === resource.url) {
+                    tilesetPath = path;
+                    break;
+                }
+            }
+        }
+
+        if (!tilesetPath) {
             continue;
         }
 
-        registerTilesetSource(resource.url, {
+        const rootUri = archive.blobUrls.get(tilesetPath) ?? resource.url;
+        const source = {
             mainPath: tilesetPath,
             files: filesRelativeToTilesetRoot(archive.blobs, tilesetPath),
-            rootUri: resource.url,
-        });
+            rootUri,
+        };
+        registerTilesetSource(source, [resource.url, tilesetPath]);
     }
 }
