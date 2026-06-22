@@ -16,6 +16,7 @@ import { polylineMetaData } from './meta/polyline-meta';
 import { EntityLabel } from './entity-label';
 import { EditMultipointGeometry } from './multipoint-geometry';
 import { modelMetaData } from './meta/model-meta';
+import { tilesetMetaData } from './meta/tileset-meta';
 import { OrientationEditor } from './orientation-editor';
 import { Section } from '../misc/elements/section';
 import { Subsection } from '../misc/elements/subsection';
@@ -54,11 +55,10 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
     const showLabel = entity?.label && 
         entity?.label?.show?.getValue() !== false;
 
-    // TODO: add metadata
-    // const tileset = entity?.tileset;
     const path = entity?.path;
     const point = entity?.point;
     const model = entity?.model;
+    const tileset = entity?.tileset;
     
     const polyline = entity?.polyline;
     const polygon = entity?.polygon;
@@ -70,6 +70,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
         polyline && polylineMetaData,
         polygon && polygonMetaData, 
         model && modelMetaData,
+        tileset && tilesetMetaData,
         point && pointMetaData,
         path && pathMetaData,
         showLabel && labelMetadata

@@ -67,10 +67,12 @@ export function PositionEditor({entity}: PositionEditorProps) {
     }, [activate, deActivate, moveController, entity]);
 
     const handleFldChange = useCallback((val: Cartesian3) => {
-        if(entity.position && entity.position.isConstant) {
+        if (entity.position && entity.position.isConstant) {
             (entity.position as ConstantPositionProperty).setValue(val);
-            handlePositionChanged();
+        } else if (entity.model || entity.tileset) {
+            entity.position = new ConstantPositionProperty(val);
         }
+        handlePositionChanged();
     }, [entity, handlePositionChanged]);
 
     return (

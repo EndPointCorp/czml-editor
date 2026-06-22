@@ -1,37 +1,37 @@
-import * as zip from "@zip.js/zip.js"
-import { CzmlDataSource, Resource } from "cesium";
+import { CzmlDataSource, Entity, Resource } from "cesium";
 import { lookupZipAsset, rewriteTilesetEntries } from "./zip-asset-resolver";
+import { registerTilesetsFromArchive, revokeZipArchive, unpackZipArchive, ZipArchive } from "./tileset-zip";
 
 export class CzmlDataSourceExtension extends CzmlDataSource {
     static __load = CzmlDataSource.load;
+
+    __czml_extended: boolean = true;
+    __archive?: ZipArchive;
+
+    destroy: () => void = () => {};
+
+    static registerTilesetSources(dataSource: unknown, entities: Entity[]) {
+        if (dataSource instanceof CzmlDataSourceExtension && dataSource.__archive) {
+            registerTilesetsFromArchive(entities, dataSource.__archive);
+        }
+    }
 
     static load: typeof CzmlDataSource.load = async function (czml: Resource | Blob | string | any, options?: CzmlDataSource.LoadOptions) {
         
         if (CzmlDataSourceExtension.iszip(czml)) {
             const file = await fetchBlob(czml);
             if (file) {
-                const reader = new zip.ZipReader(new zip.BlobReader(file));
-                const entries = await reader.getEntries();
-
-                const entriesMap = new Map<string, string>();
-
-                for (let entry of entries) {
-                    const blob = await entry?.getData?.(new zip.BlobWriter());
-                    if (blob) {
-                        const blobURL = URL.createObjectURL(blob);
-    
-                        entriesMap.set(entry.filename, blobURL);
-                    }
-                }
+                const archive = await unpackZipArchive(file);
+                const entriesMap = archive.blobUrls;
 
                 await rewriteTilesetEntries(entriesMap);
                     
-                const documentEntry = entries.find(e => /\.czml$/i.test(e.filename));
+                const documentEntry = [...entriesMap.keys()].find(name => /\.czml$/i.test(name));
                 if (documentEntry) {
-                    const documentBlobUrl = entriesMap.get(documentEntry?.filename);
+                    const documentBlobUrl = entriesMap.get(documentEntry);
 
                     if (documentBlobUrl) {
-                        const documentPath = documentEntry.filename;
+                        const documentPath = documentEntry;
                         const promise = CzmlDataSourceExtension.__load(new Resource({
                             url: documentBlobUrl,
                             proxy: {
@@ -47,19 +47,20 @@ export class CzmlDataSourceExtension extends CzmlDataSource {
                         }), options);
 
                         promise.then(ds => {
-                            (ds as CzmlDataSourceExtension).__czml_extended = true;
+                            const ext = ds as CzmlDataSourceExtension;
+                            ext.__czml_extended = true;
+                            ext.__archive = archive;
                             
-                            // See: DataSourceCollection.prototype.remove 
-                            (ds as CzmlDataSourceExtension).destroy = () => {
-                                for (let blobUrl of entriesMap.values()) {
-                                    URL.revokeObjectURL(blobUrl);
-                                }
+                            ext.destroy = () => {
+                                revokeZipArchive(archive);
                             }
                         });
 
                         return promise;
                     }
                 }
+
+                revokeZipArchive(archive);
             }
         }
 
@@ -84,17 +85,12 @@ export class CzmlDataSourceExtension extends CzmlDataSource {
             }
             
             if (src.isBlobUri) {
-                // Have to use async to check that properly
                 return true;
             }
         }
 
         return false;
     }
-
-    __czml_extended: boolean = true;
-
-    destroy: () => void = () => {};
 }
 
 async function fetchBlob(czml: Resource | Blob | string | any) {
@@ -105,4 +101,3 @@ async function fetchBlob(czml: Resource | Blob | string | any) {
     const resource = new Resource(czml);
     return await resource.fetchBlob();
 }
-

@@ -1,4 +1,5 @@
 import { Entity, Property, Resource } from "cesium";
+import { getTilesetSource } from "../tileset-source-registry";
 import { getResourceByPath } from "./field-image-writer";
 import { WriterContext } from "../export-czml";
 import { writeScalar } from "./field-writers";
@@ -32,6 +33,16 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['tileset', 'uri']);
         if (!resource || exportMap[resource.url]) {
+            continue;
+        }
+
+        const source = getTilesetSource(resource.url);
+        if (source) {
+            const files: Record<string, Blob> = {};
+            for (const file of source.files) {
+                files[file.path] = file.blob;
+            }
+            exportMap[resource.url] = { targetPath: source.mainPath, files };
             continue;
         }
 
