@@ -6,6 +6,15 @@ type OrientationEditorProps = {
     entity: Entity;
     onChange?: (entity: Entity) => void;
 }
+
+function toDegrees(radians: number): number {
+    return radians * 180 / Math.PI;
+}
+
+function toRadians(degrees: number): number {
+    return degrees * Math.PI / 180;
+}
+
 export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
 
     const orientationProperty = entity.orientation;
@@ -14,9 +23,19 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
     const position = entity.position?.isConstant && entity.position?.getValue();
 
     const valHpr = position && propVal && globalOrientationQuaternionToLocalHPR(position, propVal);
+    const valHprDegrees = valHpr && new HeadingPitchRoll(
+        toDegrees(valHpr.heading),
+        toDegrees(valHpr.pitch),
+        toDegrees(valHpr.roll),
+    );
 
-    const handleChange = useCallback((hpr: HeadingPitchRoll) => {
+    const handleChange = useCallback((hprDegrees: HeadingPitchRoll) => {
         if (position) {
+            const hpr = new HeadingPitchRoll(
+                toRadians(hprDegrees.heading),
+                toRadians(hprDegrees.pitch),
+                toRadians(hprDegrees.roll),
+            );
             const globalQ = localHPRToGlobalOrientationQuaternion(position, hpr);
 
             if (orientationProperty) {
@@ -27,6 +46,8 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
             else {
                 entity.orientation = new ConstantProperty(globalQ);
             }
+
+            onChange && onChange(entity);
         }
 
     }, [entity, position, orientationProperty, onChange]);
@@ -37,10 +58,10 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
 
     return (
     <div>
-        <h4>Orientation</h4>
+        <h4>Orientation (degrees)</h4>
 
-        <VectorField targetClass={HeadingPitchRoll} size={3} inline={true} 
-            componentNames={['heading', 'pitch', 'roll']} value={valHpr} onChange={handleChange} />
+        <VectorField targetClass={HeadingPitchRoll} size={3} inline={true} wheelStep={0.1}
+            componentNames={['heading', 'tilt', 'roll']} value={valHprDegrees} onChange={handleChange} />
     </div>);
 }
 

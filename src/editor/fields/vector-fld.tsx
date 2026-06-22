@@ -12,9 +12,10 @@ export type VectorFieldProps = {
     inline?: boolean;
     targetClass?: any;
     componentNames?: string[];
+    wheelStep?: number;
     onChange?: (value: any) => void;
 }
-export function VectorField({label, value, size, targetClass, componentNames, inline, onChange}: VectorFieldProps) {
+export function VectorField({label, value, size, targetClass, componentNames, inline, wheelStep, onChange}: VectorFieldProps) {
 
     const vectorSize = value?.length || componentNames?.length || size || 3;
     const valueArray = Array.from({length: vectorSize}, (_v, i) => value?.[i] || null);
@@ -43,8 +44,9 @@ export function VectorField({label, value, size, targetClass, componentNames, in
         const stringVal = undef ? '' : ('' + componentVal);
 
         return <InputField key={componentName} className={'component-fld'}
-            value={stringVal} 
-            label={componentName} 
+            value={stringVal}
+            label={componentName}
+            wheelStep={wheelStep}
             onChange={inputHandler.bind(undefined, i)} />
     });
 

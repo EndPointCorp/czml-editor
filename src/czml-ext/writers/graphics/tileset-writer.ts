@@ -2,6 +2,7 @@ import { Cesium3DTilesetGraphics } from "cesium";
 import { WriterContext } from "../../export-czml";
 import { Tileset as TilesetCzml } from "../../schema/tileset";
 import { writeScalar } from "../field-writers";
+import { writeTilesetUri } from "../field-tileset-writer";
 
 export function writeTileset(tileset: Cesium3DTilesetGraphics, ctx: WriterContext) {
     const czml: TilesetCzml = {};
@@ -11,7 +12,7 @@ export function writeTileset(tileset: Cesium3DTilesetGraphics, ctx: WriterContex
     }
     
     if (tileset.uri !== undefined) {
-        czml.uri = writeScalar(tileset.uri, {...ctx, path: [...ctx.path, 'uri']});
+        czml.uri = writeTilesetUri(tileset.uri, {...ctx, path: [...ctx.path, 'uri']});
     }
     
     if (tileset.maximumScreenSpaceError !== undefined) {

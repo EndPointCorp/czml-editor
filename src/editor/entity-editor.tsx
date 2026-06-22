@@ -90,7 +90,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
 
                 <OrientationEditor entity={entity} onChange={onChange} />
 
-                <EntityLabel entity={entity} onChange={onChange} />
+                <EntityLabel key={`${entity.id}.label`} entity={entity} onChange={onChange} />
                 
                 <DescriptionFld entity={entity} />
                 

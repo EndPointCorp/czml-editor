@@ -20,6 +20,11 @@ export function PositionEditor({entity}: PositionEditorProps) {
     const moveController = useContext(EditorContext).positionDragController;
 
     const [active, setActive] = useState<boolean>(false);
+    const [positionTick, setPositionTick] = useState<number>(0);
+
+    const handlePositionChanged = useCallback(() => {
+        setPositionTick(tick => tick + 1);
+    }, []);
 
     const deActivate = useCallback(() => {
         setActive(false);
@@ -29,32 +34,47 @@ export function PositionEditor({entity}: PositionEditorProps) {
             moveController?.unBindScreenSpaceEvents();
             moveController?.enableDefaultControls();
         }
-    }, [moveController, entity, setActive]);
+    }, [moveController]);
 
     const activate = useCallback(() => {
-        setActive(true);
-
-        if (moveController) {
-            attachController(moveController, entity, deActivate);
-            moveController.bindScreenSpaceEvents();
+        if (!moveController) {
+            return false;
         }
-    }, [moveController, entity, deActivate]);
+
+        const attached = attachController(moveController, entity, handlePositionChanged);
+        if (!attached) {
+            return false;
+        }
+
+        setActive(true);
+        moveController.bindScreenSpaceEvents();
+        return true;
+    }, [moveController, entity, handlePositionChanged]);
     
 
     const handleActiveChange = useCallback((val: boolean) => {
-        if (moveController && entity) {
-            val ? activate() : deActivate();
+        if (!moveController || !entity) {
+            return;
         }
-    }, [activate, deActivate]);
+
+        if (val) {
+            if (!activate()) {
+                setActive(false);
+            }
+        } else {
+            deActivate();
+        }
+    }, [activate, deActivate, moveController, entity]);
 
     const handleFldChange = useCallback((val: Cartesian3) => {
         if(entity.position && entity.position.isConstant) {
             (entity.position as ConstantPositionProperty).setValue(val);
+            handlePositionChanged();
         }
-    }, [entity])
+    }, [entity, handlePositionChanged]);
 
     return (
-        <div class={'entity-position'}>
+        <div class={'entity-position'} key={`position-${entity.id}-${positionTick}`}>
             <h4><span>Position</span> <button onClick={handleFlyTo} class={'fly-to-button'}>Flyto</button></h4>
             <PositionFld entity={entity} onChange={handleFldChange} />
             <LabledSwitch checked={active} onChange={handleActiveChange}

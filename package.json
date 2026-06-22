@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build-img-selector": "cd 3dparty/cesium-img-selector && yarn install && yarn build",
+    "prebuild": "yarn build-img-selector && yarn install --check-files",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "clean": "rm -rf node_modules/* && rm yarn.lock",

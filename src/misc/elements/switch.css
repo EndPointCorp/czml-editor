@@ -1,4 +1,4 @@
-.switch {
+.ui-toggle {
     font-size: 17px;
     position: relative;
     display: inline-block;
@@ -6,15 +6,13 @@
     height: 2em;
 }
 
-/* Hide default HTML checkbox */
-.switch input {
+.ui-toggle input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-/* The slider */
-.slider {
+.ui-toggle-track {
     position: absolute;
     cursor: pointer;
     top: 0;
@@ -27,7 +25,7 @@
     border-radius: 30px;
 }
 
-.slider:before {
+.ui-toggle-track:before {
     position: absolute;
     content: "";
     height: 1.4em;
@@ -39,16 +37,16 @@
     transition: .4s;
 }
 
-input:checked+.slider {
+.ui-toggle input:checked + .ui-toggle-track {
     background-color: #007bff;
     border: 1px solid #007bff;
 }
 
-input:focus+.slider {
+.ui-toggle input:focus + .ui-toggle-track {
     box-shadow: 0 0 1px #007bff;
 }
 
-input:checked+.slider:before {
+.ui-toggle input:checked + .ui-toggle-track:before {
     transform: translateX(1.4em);
     background-color: #fff;
 }
