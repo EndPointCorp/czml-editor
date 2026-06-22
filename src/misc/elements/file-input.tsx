@@ -5,17 +5,25 @@ export type FileInputProps = {
     accept?: string;
     disabled?: boolean;
     onFile?: (file: File) => void;
+    onFiles?: (files: File[]) => void;
 }
-export function FileInput({onFile, accept, name, disabled}: FileInputProps) {
+export function FileInput({onFile, onFiles, accept, name, disabled}: FileInputProps) {
 
     const inputRef = useRef<HTMLInputElement>(null);
 
     const handleFileSelect = useCallback(() => {
-        // @ts-ignore
-        for (let f of inputRef.current?.files) {
-            onFile && onFile(f);
+        const files = Array.from(inputRef.current?.files ?? []);
+
+        if (onFiles) {
+            onFiles(files);
         }
-    }, [onFile, inputRef]);
+
+        if (onFile) {
+            for (const f of files) {
+                onFile(f);
+            }
+        }
+    }, [onFile, onFiles, inputRef]);
 
     return (
         <>

@@ -60,7 +60,7 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
     <div>
         <h4>Orientation (degrees)</h4>
 
-        <VectorField targetClass={HeadingPitchRoll} size={3} inline={true} 
+        <VectorField targetClass={HeadingPitchRoll} size={3} inline={true} wheelStep={0.1}
             componentNames={['heading', 'tilt', 'roll']} value={valHprDegrees} onChange={handleChange} />
     </div>);
 }

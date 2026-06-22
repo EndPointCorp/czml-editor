@@ -1,3 +1,25 @@
 .export > button {
     display: block;
 }
+
+.export-format {
+    margin: 0.4em 0 1em 0;
+    padding-left: 0.6em;
+    border-left: 2px solid #ddd;
+}
+
+.export-note {
+    max-width: 32em;
+    font-size: 0.85em;
+}
+
+.export-note p {
+    margin: 0.4em 0;
+}
+
+.export-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    margin: 0.6em 0;
+}

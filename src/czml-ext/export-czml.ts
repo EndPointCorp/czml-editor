@@ -1,7 +1,7 @@
 import { DataSource, DataSourceClock, Entity } from "cesium";
-import { exportModels as exportModelsF, ModelExport } from "./writers/field-gltf-writer";
+import { exportModels as exportModelsF, exportModelsAsDataUri as exportModelsAsDataUriF, exportModelNames as exportModelNamesF, ModelRefMap, ModelExport } from "./writers/field-gltf-writer";
 import { exportTilesets as exportTilesetsF, TilesetExport } from "./writers/field-tileset-writer";
-import { buildImagesMap, exportImages as exportImagesF, getResourceByPath, ImageExport, ResourcesMap } from "./writers/field-image-writer";
+import { buildImagesMap, exportImages as exportImagesF, exportImagesAsDataUri as exportImagesAsDataUriF, exportImageNames as exportImageNamesF, getResourceByPath, ImageExport, ImageRefMap, ResourcesMap } from "./writers/field-image-writer";
 import { writeOrientation, writePosition, writePropertyBag, writeScalar, writeTimeIntervalCollectionValue } from "./writers/field-writers";
 import { writeLabel } from "./writers/graphics/label-writer";
 import { writeBillboard } from "./writers/graphics/billboard-writer";
@@ -40,6 +40,9 @@ export type WriterContext = {
     exportedImages?: ImageExport;
     exportedModels?: ModelExport;
     exportedTilesets?: TilesetExport;
+
+    imageRefs?: ImageRefMap;
+    modelRefs?: ModelRefMap;
 }
 
 type DocumentPacketCzml = {
@@ -57,6 +60,19 @@ export type ExportOptions = {
     forceFetchImages?: boolean;
     exportModels?: boolean;
     exportTilesets?: boolean;
+    /**
+     * Controls how referenced billboard images are written into the plain .czml
+     * download (no zip archive):
+     *   - true  → embed each image as a base64 data URI inside the document
+     *   - false → replace each image with a relative file name reference
+     *   - undefined → leave the original resource URL untouched
+     */
+    embedImages?: boolean;
+    /**
+     * Controls how referenced 3D models are written into the plain .czml
+     * download, with the same semantics as {@link embedImages}.
+     */
+    embedModels?: boolean;
     onFailedToEncode?: (entity: Entity, path: string[], val: any) => void;
 }
 export async function exportAsCzml(entities: Entity[], options?: ExportOptions) {
@@ -81,6 +97,18 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
 
     if (options.exportTilesets) {
         ctx.exportedTilesets = await exportTilesetsF(entities);
+    }
+
+    if (options.embedImages !== undefined) {
+        ctx.imageRefs = options.embedImages
+            ? await exportImagesAsDataUriF(ctx.resourcesMap)
+            : exportImageNamesF(ctx.resourcesMap, options);
+    }
+
+    if (options.embedModels !== undefined) {
+        ctx.modelRefs = options.embedModels
+            ? await exportModelsAsDataUriF(entities)
+            : await exportModelNamesF(entities);
     }
 
     const docPacket = options.documentPacket || {"id":"document", "version":"1.0"};

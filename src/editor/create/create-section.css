@@ -10,6 +10,20 @@
     margin-left: 0.75em;
 }
 
+.model-files-error,
+.model-files-warning {
+    font-size: 0.8em;
+    margin: 0.4em 0;
+}
+
+.model-files-error {
+    color: #c0392b;
+}
+
+.model-files-warning {
+    color: #b9770e;
+}
+
 .creation-actions {
     min-height: 4em;
 }

@@ -9,6 +9,7 @@ import { normalizeZipPath } from "../../czml-ext/zip-asset-resolver";
 
 import { ZipWriter, BlobWriter, TextReader } from "@zip.js/zip.js"
 import { ModalPane } from "../../misc/elements/modal-pane";
+import { LabledSwitch } from "../../misc/elements/labled-switch";
 import { EntitiesExtra } from "../editor";
 
 
@@ -20,6 +21,11 @@ type ExportFilesProps = {
 export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProps) {
 
     const [exportDialogueOpen, setExportDialogueOpen] = useState<boolean>(false);
+
+    // Plain .czml download: embed referenced resources as base64 when on,
+    // otherwise reference them by relative file name.
+    const [inlineImages, setInlineImages] = useState<boolean>(true);
+    const [inlineModels, setInlineModels] = useState<boolean>(true);
 
     const handleDownloadKML = useCallback(async (archived?: boolean) => {
         const entitiesToExport = entities
@@ -66,7 +72,9 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
     }, [entities, entitiesExtra, onExport]);
 
     const handleDownloadCZML = useCallback(async (archived?: boolean) => {
-        const options = { exportImages: archived, exportModels: archived, exportTilesets: archived };
+        const options = archived
+            ? { exportImages: true, exportModels: true, exportTilesets: true }
+            : { embedImages: inlineImages, embedModels: inlineModels };
 
         const entitiesToExport = entities
             .filter(e => !(entitiesExtra?.[e.id].doNotExport))
@@ -92,8 +100,10 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                 }
 
                 if (exportedModels) {
-                    for (const { targetPath, model } of Object.values(exportedModels)) {
-                        await zipWriter.add(targetPath, model.stream());
+                    for (const { files } of Object.values(exportedModels)) {
+                        for (const { path, blob } of files) {
+                            await zipWriter.add(path, blob.stream());
+                        }
                     }
                 }
 
@@ -121,7 +131,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             console.error(e);
         }
         
-    }, [entities, entitiesExtra, onExport]);
+    }, [entities, entitiesExtra, onExport, inlineImages, inlineModels]);
 
     return (
         <div class={'export'}>
@@ -131,9 +141,34 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     <div><button onClick={() => {setExportDialogueOpen(false)}}>Close</button></div>
                     
                     <h4>Export as CZML</h4>
-                    <div>
+
+                    <div class={'export-format'}>
                         <button onClick={() => {handleDownloadCZML(true)}}>Download CZMZ</button>
+                        <div class={'export-note'}>
+                            A zip archive containing the CZML document alongside its
+                            referenced resources (3D models, billboard images and
+                            tilesets) as separate files. Models keep the same format
+                            (gltf or glb) they were imported in.
+                        </div>
+                    </div>
+
+                    <div class={'export-format'}>
                         <button onClick={() => {handleDownloadCZML(false)}}>Download CZML</button>
+                        <div class={'export-options'}>
+                            <LabledSwitch label={'Inline images (base64)'}
+                                checked={inlineImages} onChange={setInlineImages} />
+                            <LabledSwitch label={'Inline 3D models (base64)'}
+                                checked={inlineModels} onChange={setInlineModels} />
+                        </div>
+                        <div class={'export-note'}>
+                            A single file. For each resource type above, turn the
+                            toggle <b>on</b> to base64-encode and embed the resource
+                            directly into the document (self-contained, but larger), or
+                            <b> off</b> to replace it with a relative file name
+                            reference that you supply alongside the document. Tilesets
+                            are never embedded and remain referenced by their original
+                            URL.
+                        </div>
                     </div>
                     <h4>Export as KML</h4>
                     <div>
