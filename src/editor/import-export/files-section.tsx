@@ -3,7 +3,7 @@ import { CzmlDataSource, Entity, GeoJsonDataSource, KmlDataSource } from "cesium
 import { LoadFiles } from "./load-files";
 import { ExportFiles } from "./export-files";
 import { Section } from "../../misc/elements/section";
-import { useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import { EntitiesExtra } from "../editor";
 import HelpDialog from "./help-dialog";
 import { ImportFromFile } from "./import-files";
@@ -13,9 +13,9 @@ export type CesiumDataSource = CzmlDataSource | KmlDataSource | GeoJsonDataSourc
 export type FilesSectionProps = {
     entities: Entity[];
     entitiesExtra?: EntitiesExtra;
-    onLoad: (entities: Entity[], dataSource: CesiumDataSource, file: File) => any;
+    onNewEntities: (entities: Entity[], file?: File, dataSource?: CesiumDataSource) => any;
 }
-export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionProps) {
+export function FilesSection({ entities, entitiesExtra, onNewEntities }: FilesSectionProps) {
 
     const [exported, setExported] = useState<boolean>(false);
 
@@ -30,16 +30,22 @@ export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionPr
         return () => {
             window.onbeforeunload = null;
         }
-      }, [entities, exported]);
+    }, [entities, exported]);
+
+    const handleImport = useCallback((entities: Entity[]) => {
+        if (entities && entities.length > 0) {
+            onNewEntities(entities);
+        }
+    }, [onNewEntities]);
 
     return (
         <Section header={'Import / Export'} className={'upload-section'}>
             <HelpDialog />
-            <LoadFiles onLoad={onLoad} />
-            <ImportFromFile />
-            <ExportFiles entities={entities} 
-                entitiesExtra={entitiesExtra} 
-                onExport={() => {setExported(true);}} />
+            <LoadFiles onLoad={onNewEntities} />
+            <ImportFromFile onImport={handleImport} />
+            <ExportFiles entities={entities}
+                entitiesExtra={entitiesExtra}
+                onExport={() => { setExported(true); }} />
         </Section>
     );
 }

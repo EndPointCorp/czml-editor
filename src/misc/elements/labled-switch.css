@@ -1,3 +1,11 @@
+.switch {
+    --tg-height: 1.5em;
+    --tg-padding: .2em;
+}
+.switch {
+    --tg-width: calc(var(--tg-height) * 2);
+}
+
 .labled-switch label:not(.switch) {
     margin-right: 0.5em;
 }

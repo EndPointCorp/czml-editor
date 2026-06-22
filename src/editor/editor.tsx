@@ -32,7 +32,7 @@ export type SharedResourcesContextT = {
 export const EditorContext = createContext<EditorContextT>({});
 export const SharedResourcesContext = createContext<SharedResourcesContextT>({
     resources: DefaultSharedResources,
-    setResources: (_newResources) => {}
+    setResources: (_newResources) => { }
 });
 
 
@@ -42,7 +42,7 @@ export type EntityExtra = {
 }
 
 export type EntitiesExtra = {
-    [entityId : string]: EntityExtra
+    [entityId: string]: EntityExtra
 };
 
 
@@ -78,26 +78,26 @@ export function Editor() {
 
     const handleDsLoad = useCallback((newEntities: Entity[]) => {
         const allEntities = [...entities, ...newEntities];
-        
+
         updateExtra(extra, allEntities);
-        setExtra({...extra});
+        setExtra({ ...extra });
 
         const uniqueResources = Array.from(mapBillboardImageResources(allEntities).keys());
-        setResources({...resources, datasourceIcons: uniqueResources});
-        
+        setResources({ ...resources, datasourceIcons: uniqueResources });
+
         setEntities(allEntities);
     }, [entities, setEntities, resources, setResources, extra, setExtra]);
 
     const deleteEntity = useCallback((entity: Entity) => {
         console.log('delete entity', entity);
-        
+
         viewer && removeEntitytFromViewer(viewer, entity);
 
         delete extra[entity.id];
         setExtra(extra);
-        
+
         setEntities(entities.filter(e => e.id !== entity.id));
-        
+
         setSelectedEntity(null);
     }, [entities, setEntities, setSelectedEntity, viewer, extra, setExtra]);
 
@@ -107,7 +107,7 @@ export function Editor() {
         const allEntities = [...entities, newEntity];
 
         updateExtra(extra, allEntities);
-        setExtra({...extra});
+        setExtra({ ...extra });
 
         setEntities(allEntities);
         setSelectedEntity(newEntity);
@@ -115,7 +115,7 @@ export function Editor() {
 
     const handleEntityExtraChange = useCallback((entity: Entity, entityNewExtra: EntityExtra) => {
         extra[entity.id] = entityNewExtra;
-        setExtra({...extra});
+        setExtra({ ...extra });
     }, [extra, setExtra]);
 
     const stylesHash = strHashCode(JSON.stringify(stylesToPropagate));
@@ -123,14 +123,14 @@ export function Editor() {
     return (
         <div id={'editor'} class={'section entity-editor'}>
             <EditorContext value={editorContext}>
-                <FilesSection entities={entities} entitiesExtra={extra} onLoad={handleDsLoad} />
-                <SharedResourcesContext value={{resources, setResources}}>
+                <FilesSection entities={entities} entitiesExtra={extra} onNewEntities={handleDsLoad} />
+                <SharedResourcesContext value={{ resources, setResources }}>
                     <CreateEntitySection {...{ onEntityCreated }} />
-                    <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
+                    <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }}
                         onEntityExtraChange={handleEntityExtraChange}
                     />
-                    <StyleCopyDialogue key={stylesHash} 
-                        entities={entities} 
+                    <StyleCopyDialogue key={stylesHash}
+                        entities={entities}
                         entitiesExtra={extra}
                         stylesToPropagate={stylesToPropagate}
                         visible={stylesDialogue} onClose={() => setStylesDialogue(false)} />
@@ -145,7 +145,7 @@ function updateExtra(extra: EntitiesExtra, entities: Entity[]) {
 
     const typeCounts = {};
     types.forEach(t => (typeCounts as any)[t] = 0);
-    
+
     entities.forEach(e => {
         const type = types.find(tname => (e as any)[tname] !== undefined);
 
@@ -161,7 +161,7 @@ function updateExtra(extra: EntitiesExtra, entities: Entity[]) {
             }
         }
     });
-    
+
 }
 
 function removeEntitytFromViewer(_v: Viewer, entity: Entity) {
@@ -174,10 +174,10 @@ function strHashCode(str: string) {
     if (str.length === 0) return hash;
 
     for (i = 0; i < str.length; i++) {
-      chr = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + chr;
-      hash |= 0; // Convert to 32bit integer
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
     }
 
     return hash;
-  }
+}

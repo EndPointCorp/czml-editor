@@ -14,14 +14,15 @@
     "deploy": "gh-pages --nojekyll -d dist"
   },
   "dependencies": {
-    "@fast-csv/parse": "^5.0.5",
     "cesium": "^1.126.0",
     "cesium-img-selector": "file:3dparty/cesium-img-selector",
     "html-format": "^1.1.7",
+    "papaparse": "^5.5.3",
     "preact": "^10.25.4"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.1",
+    "@types/papaparse": "^5.3.16",
     "gh-pages": "^6.3.0",
     "json-schema-to-typescript": "^15.0.4",
     "rollup-plugin-visualizer": "^5.14.0",

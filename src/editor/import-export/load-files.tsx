@@ -6,14 +6,14 @@ import { ViewerContext } from "../../app";
 import { CzmlDataSourceExtension } from "../../czml-ext/czml-ds-ext";
 
 type LoadFilesProps = {
-    onLoad: (entities: Entity[], dataSource: CesiumDataSource, file: File) => any;
+    onLoad: (entities: Entity[], file: File, dataSource: CesiumDataSource,) => any;
 }
-export function LoadFiles({onLoad}: LoadFilesProps) {
+export function LoadFiles({ onLoad }: LoadFilesProps) {
     const viewer = useContext(ViewerContext);
-    
+
     const handleDSLoaded = useCallback((ds: CesiumDataSource, file: File) => {
         const newEntities = ds.entities.values;
-        onLoad(newEntities, ds, file);
+        onLoad(newEntities, file, ds);
     }, [onLoad]);
 
     const handleCesiumDS = useCallback((ds: Promise<CesiumDataSource>, file: File) => {
@@ -49,9 +49,9 @@ export function LoadFiles({onLoad}: LoadFilesProps) {
     }, [handleCesiumDS]);
 
     return (
-        <FileInput name="Open" 
-                accept={".kml, .kmz, .json, .czml, .czmz, .czml.zip, .geojson"} 
-                onFile={fileSelected} />
+        <FileInput name="Open"
+            accept={".kml, .kmz, .json, .czml, .czmz, .czml.zip, .geojson"}
+            onFile={fileSelected} />
     );
 
 }

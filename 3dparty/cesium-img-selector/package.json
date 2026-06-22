@@ -8,11 +8,9 @@
   "module": "dist/img-selector.mjs",
   "types": "dist/ImgSelector.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/img-selector.mjs",
-      "require": "./dist/img-selector.cjs",
-      "types": "./dist/ImgSelector.d.ts"
-    }
+    "import": "./dist/img-selector.mjs",
+    "require": "./dist/img-selector.cjs",
+    "types": "./dist/ImgSelector.d.ts"
   },
   "license": "MIT",
   "scripts": {

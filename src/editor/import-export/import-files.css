@@ -1,0 +1,41 @@
+.import-table-container {
+    width: 100%;
+    overflow-x: scroll;
+    overflow-y: scroll;
+}
+
+.csv-data {
+    width: auto;
+    table-layout: auto;
+    border: 1px solid #ccc;
+    border-collapse: collapse;
+}
+
+.csv-data th, .csv-data td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.csv-data th {
+    background-color: #f2f2f25d;
+}
+
+.csv-data td {
+    max-width: 200px;
+    overflow: hidden;
+}
+.creation-option label {
+    display: inline-block;
+    width: 100px;
+}
+.form-section {
+    padding-bottom: 0.75em;
+}
+.section-title {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+}
+.csv-import-options {
+    margin-bottom: 1em;
+}
