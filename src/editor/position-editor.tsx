@@ -76,9 +76,9 @@ export function PositionEditor({entity}: PositionEditorProps) {
     }, [entity, handlePositionChanged]);
 
     return (
-        <div class={'entity-position'} key={`position-${entity.id}-${positionTick}`}>
+        <div class={'entity-position'} key={`position-${entity.id}`}>
             <h4><span>Position</span> <button onClick={handleFlyTo} class={'fly-to-button'}>Flyto</button></h4>
-            <PositionFld entity={entity} onChange={handleFldChange} />
+            <PositionFld key={'editor-position-fld'} entity={entity} onChange={handleFldChange} />
             <LabledSwitch checked={active} onChange={handleActiveChange}
                 label={'Drag to move'}></LabledSwitch>
         </div>

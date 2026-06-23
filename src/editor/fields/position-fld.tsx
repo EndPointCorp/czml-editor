@@ -54,12 +54,12 @@ export function PositionFld({entity, onChange}: PositionFldProps) {
 
     if (isEditable) {
         return (
-            <div class={'position-fld'}>
-                <InputField label={'latitude'} value={latitude !== undefined ? latitude.toFixed(6) : ''}
+            <div class={'position-fld position-fld-edit'}>
+                <InputField key={'position-lat'} label={'latitude'} fixed={6} value={latitude}
                     wheelStep={0.000001} onChange={handleLatitude} />
-                <InputField label={'longitude'} value={longitude !== undefined ? longitude.toFixed(6) : ''}
+                <InputField key={'position-lon'} label={'longitude'} fixed={6} value={longitude}
                     wheelStep={0.000001} onChange={handleLongitude} />
-                <InputField label={'height (m)'} value={height.toFixed(3)}
+                <InputField  key={'position-h'} label={'height (m)'} fixed={3} value={height}
                     wheelStep={1} onChange={handleHeight} />
             </div>
         );
