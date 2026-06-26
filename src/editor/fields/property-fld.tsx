@@ -1,4 +1,4 @@
-import { BillboardGraphics, Property as CesiumProperty, ConstantProperty, DistanceDisplayCondition, LabelGraphics, ModelGraphics, NearFarScalar, PolygonGraphics, PolylineGraphics } from "cesium";
+import { BillboardGraphics, Cesium3DTilesetGraphics, Property as CesiumProperty, ConstantProperty, DistanceDisplayCondition, LabelGraphics, ModelGraphics, NearFarScalar, PolygonGraphics, PolylineGraphics, Resource } from "cesium";
 import { useCallback, useState } from 'preact/hooks';
 import camelCaseToTitle from '../../misc/cammelToTitle';
 import { DistanceDisplayConditionAsVector, NearFarAsVector, PropertyMeta, PropertyTypeVector } from '../meta/meta';
@@ -12,7 +12,7 @@ import { VectorField } from './vector-fld';
 import "./property-fld.css";
 import { ActionField } from "./action-fld";
 
-export type SupportedGraphic = PolygonGraphics | PolylineGraphics | BillboardGraphics | LabelGraphics | ModelGraphics;
+export type SupportedGraphic = PolygonGraphics | PolylineGraphics | BillboardGraphics | LabelGraphics | ModelGraphics | Cesium3DTilesetGraphics;
 
 export type PropertyFieldProps = {
     subject: SupportedGraphic
@@ -27,7 +27,10 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
     const property = (subject as any)[metaProperty.name] as CesiumProperty;
     const interpolated = property !== undefined && !property.isConstant;
 
-    const value = (property as ConstantProperty)?.valueOf();
+    const rawValue = property !== undefined && property.isConstant
+        ? (property as ConstantProperty).getValue()
+        : (property as ConstantProperty)?.valueOf();
+    const value = rawValue instanceof Resource ? rawValue.url : rawValue;
     
     const [_oldVal, forceUpdate] = useState<any>();
 
@@ -40,7 +43,7 @@ export function PropertyField({subject, property: metaProperty, onChange}: Prope
         if (property !== undefined && (property as any).setValue) {
             (property as ConstantProperty).setValue(val);
         }
-        else if (metaProperty.type === 'enum') {
+        else if (metaProperty.type === 'enum' || metaProperty.type === 'string' || metaProperty.name === 'uri') {
             (subject as any)[metaProperty.name] = new ConstantProperty(val);
         }
         else {

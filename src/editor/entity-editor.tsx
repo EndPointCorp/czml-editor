@@ -24,6 +24,7 @@ import { PropertyMeta } from './meta/meta';
 import { makeChangesSnapshot, StyleChanges, trackChange } from '../geometry-editor/changes-tracker';
 import { pathMetaData } from './meta/path-meta';
 import { pointMetaData } from './meta/point-meta';
+import { TilesetUriField } from './fields/tileset-uri-fld';
 
 export type EntityEditorProps = {
     entity: Entity | null;
@@ -96,6 +97,8 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
                 <DescriptionFld entity={entity} />
                 
                 <EntityData entity={entity} {...{showData, setShowData}} />
+
+                {tileset && <TilesetUriField entity={entity} onChange={handleEntityChange} />}
             </Subsection>
 
             <Subsection key={entity.id + '.subsection-styling'}>
