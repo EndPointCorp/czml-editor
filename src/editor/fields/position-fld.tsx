@@ -52,6 +52,12 @@ export function PositionFld({entity, onChange}: PositionFldProps) {
         return undefined;
     }
 
+    if (latitude === undefined || longitude === undefined) {
+        return (<div>
+            Position is not set
+        </div>);
+    }
+
     if (isEditable) {
         return (
             <div class={'position-fld position-fld-edit'}>

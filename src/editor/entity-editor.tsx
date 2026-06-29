@@ -84,6 +84,11 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
             <Subsection key={entity.id + '.subsection-common'}>
                 <InputField label={'Entity name'} key={`${entity.id}.name`} value={entity.name} 
                     onChange={handleNameInput} />
+
+                {tileset && <div>
+                    <div>{ '' + tileset.uri }</div>
+                    <button>Replace</button>
+                </div>}
                 
                 <PositionEditor key={`${entity.id}.position`} entity={entity} />
 

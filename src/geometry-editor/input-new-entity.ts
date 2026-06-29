@@ -132,7 +132,7 @@ export class CreateEntityByClickController {
         });
     }
 
-    createTileset(position: Cartesian3) {
+    createTileset(position: Cartesian3 | undefined) {
         const uri = this.tilesetUri;
         const name = this.tilesetName;
 

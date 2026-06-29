@@ -1,4 +1,4 @@
-import { Cartesian3, ConstantPositionProperty, Entity } from "cesium"
+import { Cartesian3, Cartographic, ConstantPositionProperty, Entity } from "cesium"
 import { LabledSwitch } from "../misc/elements/labled-switch"
 import { useCallback, useContext, useState } from "preact/hooks"
 import { EditorContext } from "./editor"
@@ -79,6 +79,14 @@ export function PositionEditor({entity}: PositionEditorProps) {
         <div class={'entity-position'} key={`position-${entity.id}`}>
             <h4><span>Position</span> <button onClick={handleFlyTo} class={'fly-to-button'}>Flyto</button></h4>
             <PositionFld key={'editor-position-fld'} entity={entity} onChange={handleFldChange} />
+            {
+            <button key={`position-unset-${entity.id}-${positionTick}`} 
+                onClick={() => {entity.position = undefined; console.log(entity); handlePositionChanged();}}>Set to empty</button>
+            }
+            {/* 
+            <button key={`position-zero-${entity.id}-${positionTick}`} 
+                onClick={() => {entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0, 0.0)); handlePositionChanged();}}>Set to 0</button> 
+            */}
             <LabledSwitch checked={active} onChange={handleActiveChange}
                 label={'Drag to move'}></LabledSwitch>
         </div>
