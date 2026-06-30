@@ -23,11 +23,15 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
     const position = entity.position?.isConstant && entity.position?.getValue();
 
     const valHpr = position && propVal && globalOrientationQuaternionToLocalHPR(position, propVal);
-    const valHprDegrees = valHpr && new HeadingPitchRoll(
-        toDegrees(valHpr.heading),
-        toDegrees(valHpr.pitch),
-        toDegrees(valHpr.roll),
-    );
+    const valHprDegrees = position
+        ? (valHpr
+            ? new HeadingPitchRoll(
+                toDegrees(valHpr.heading),
+                toDegrees(valHpr.pitch),
+                toDegrees(valHpr.roll),
+            )
+            : new HeadingPitchRoll(0, 0, 0))
+        : undefined;
 
     const handleChange = useCallback((hprDegrees: HeadingPitchRoll) => {
         if (position) {
@@ -52,16 +56,27 @@ export function OrientationEditor({entity, onChange}: OrientationEditorProps) {
 
     }, [entity, position, orientationProperty, onChange]);
 
-    if (!entity.model) {
+    if (!entity.model && !entity.tileset) {
         return;
+    }
+
+    if (!position) {
+        return (
+            <div>
+                <h4>Orientation (degrees)</h4>
+                <p class={'orientation-hint'}>Set a position first to edit orientation.</p>
+            </div>
+        );
     }
 
     return (
     <div>
         <h4>Orientation (degrees)</h4>
 
-        <VectorField targetClass={HeadingPitchRoll} size={3} inline={true} wheelStep={0.1}
-            componentNames={['heading', 'tilt', 'roll']} value={valHprDegrees} onChange={handleChange} />
+        <VectorField key={`${entity.id}.orientation`} targetClass={HeadingPitchRoll} size={3} inline={true} wheelStep={0.1}
+            componentNames={['heading', 'tilt', 'roll']}
+            value={valHprDegrees ? [valHprDegrees.heading, valHprDegrees.pitch, valHprDegrees.roll] : undefined}
+            onChange={handleChange} />
     </div>);
 }
 

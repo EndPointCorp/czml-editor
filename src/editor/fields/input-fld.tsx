@@ -6,8 +6,9 @@ var idCounter = 0;
 
 export type InputFieldProps = {
     label?: string;
-    value?: string;
+    value?: string | number;
     className?: string;
+    fixed?: number;
     /**
      * When set, scrolling the wheel over the (focused) field nudges its numeric
      * value by this amount. Left undefined the field behaves as plain text.
@@ -15,7 +16,7 @@ export type InputFieldProps = {
     wheelStep?: number;
     onChange?: (value: string) => void;
 }
-export function InputField({label, value, className, wheelStep, onChange}: InputFieldProps) {
+export function InputField({label, value, className, fixed, wheelStep, onChange}: InputFieldProps) {
     const id = 'input-' + (idCounter++);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -45,11 +46,14 @@ export function InputField({label, value, className, wheelStep, onChange}: Input
         onChange && onChange('' + next);
     }, [wheelStep, value, onChange]);
 
+    const needsFormatToFixed = value !== undefined && typeof value === 'number' && wheelStep !== undefined && fixed;
+    const v = needsFormatToFixed ? value.toFixed(fixed) : value;
+
     return (
         <div class={cls('input-container', 'generic', className)}>
             <input ref={inputRef} type={'text'} class={cls('input', value !== undefined && 'not-empty')}
                 id={id}
-                value={value}
+                value={v}
                 onChange={inputHandler}
                 onWheel={wheelStep !== undefined ? wheelHandler : undefined}></input>
             {label && <label for={id} class="label">{label}</label>}

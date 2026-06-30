@@ -1,9 +1,10 @@
-import { BillboardGraphics, Cartesian3, Entity, Event, HeightReference, LabelGraphics, ModelGraphics, Resource, ScreenSpaceEventHandler, ScreenSpaceEventType, VerticalOrigin, Viewer } from "cesium";
+import { BillboardGraphics, Cartesian3, Cesium3DTilesetGraphics, Entity, Event, HeightReference, LabelGraphics, ModelGraphics, Resource, ScreenSpaceEventHandler, ScreenSpaceEventType, VerticalOrigin, Viewer } from "cesium";
 import { getPickCoordinates } from "./pick-coordinates";
 
 export enum CreateEntityInputMode {
     billboard,
     model,
+    tileset,
     label,
     point,
 }
@@ -37,6 +38,11 @@ export class CreateEntityByClickController {
     modelUri?: Resource | string | null = null;
     modelName?: string;
 
+    tilesetUri?: string | null = null;
+    tilesetName?: string;
+
+    tilesetProperties: Cesium3DTilesetGraphics.ConstructorOptions = {};
+
     newEntityEvent = new Event<(entity: Entity) => void>();
 
     constructor(viewer: Viewer) {
@@ -66,6 +72,18 @@ export class CreateEntityByClickController {
             
             this.modelUri = null;
             this.modelName = undefined;
+        }
+        else if (this.inputMode === CreateEntityInputMode.tileset) {
+            this.inputMode = null;
+            const position = getPickCoordinates(this.viewer, event.position);
+
+            if (position && this.tilesetUri) {
+                const entity = this.createTileset(position);
+                this.handleNewEntity(entity);
+            }
+
+            this.tilesetUri = null;
+            this.tilesetName = undefined;
         }
         else if (this.inputMode === CreateEntityInputMode.label) {
             this.inputMode = null;
@@ -111,6 +129,20 @@ export class CreateEntityByClickController {
                 uri,
                 ...this.modelProperties
             } as ModelGraphics.ConstructorOptions
+        });
+    }
+
+    createTileset(position: Cartesian3 | undefined) {
+        const uri = this.tilesetUri;
+        const name = this.tilesetName;
+
+        return new Entity({
+            name,
+            position,
+            tileset: {
+                uri,
+                ...this.tilesetProperties,
+            } as Cesium3DTilesetGraphics.ConstructorOptions,
         });
     }
 

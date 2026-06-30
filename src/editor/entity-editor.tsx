@@ -16,6 +16,7 @@ import { polylineMetaData } from './meta/polyline-meta';
 import { EntityLabel } from './entity-label';
 import { EditMultipointGeometry } from './multipoint-geometry';
 import { modelMetaData } from './meta/model-meta';
+import { tilesetMetaData } from './meta/tileset-meta';
 import { OrientationEditor } from './orientation-editor';
 import { Section } from '../misc/elements/section';
 import { Subsection } from '../misc/elements/subsection';
@@ -23,6 +24,8 @@ import { PropertyMeta } from './meta/meta';
 import { makeChangesSnapshot, StyleChanges, trackChange } from '../geometry-editor/changes-tracker';
 import { pathMetaData } from './meta/path-meta';
 import { pointMetaData } from './meta/point-meta';
+import { displayTilesetUri } from '../czml-ext/model-name';
+import { getResourceByPath } from '../czml-ext/writers/field-image-writer';
 
 export type EntityEditorProps = {
     entity: Entity | null;
@@ -54,11 +57,10 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
     const showLabel = entity?.label && 
         entity?.label?.show?.getValue() !== false;
 
-    // TODO: add metadata
-    // const tileset = entity?.tileset;
     const path = entity?.path;
     const point = entity?.point;
     const model = entity?.model;
+    const tileset = entity?.tileset;
     
     const polyline = entity?.polyline;
     const polygon = entity?.polygon;
@@ -70,6 +72,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
         polyline && polylineMetaData,
         polygon && polygonMetaData, 
         model && modelMetaData,
+        tileset && tilesetMetaData,
         point && pointMetaData,
         path && pathMetaData,
         showLabel && labelMetadata
@@ -83,6 +86,11 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
             <Subsection key={entity.id + '.subsection-common'}>
                 <InputField label={'Entity name'} key={`${entity.id}.name`} value={entity.name} 
                     onChange={handleNameInput} />
+
+                {tileset && <div>
+                    <div>{ displayTilesetUri(getResourceByPath(entity, ['tileset', 'uri']) ?? '') }</div>
+                    <button>Replace</button>
+                </div>}
                 
                 <PositionEditor key={`${entity.id}.position`} entity={entity} />
 

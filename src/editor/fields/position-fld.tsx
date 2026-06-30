@@ -17,18 +17,58 @@ export function PositionFld({entity, onChange}: PositionFldProps) {
 
     const latitude = toDegrees(catographic?.latitude);
     const longitude = toDegrees(catographic?.longitude);
-    const height = catographic?.height;
+    const height = catographic?.height ?? 0;
+
+    const isEditable = !!(entity.model || entity.tileset);
+
+    const setPosition = useCallback((lat: number, lon: number, h: number) => {
+        if (!isNaN(lat) && !isNaN(lon) && !isNaN(h)) {
+            onChange && onChange(Cartesian3.fromDegrees(lon, lat, h));
+        }
+    }, [onChange]);
+
+    const handleLatitude = useCallback((newVal: string) => {
+        const num = parseFloat(newVal);
+        if (!isNaN(num)) {
+            setPosition(num, longitude ?? 0, height);
+        }
+    }, [longitude, height, setPosition]);
+
+    const handleLongitude = useCallback((newVal: string) => {
+        const num = parseFloat(newVal);
+        if (!isNaN(num)) {
+            setPosition(latitude ?? 0, num, height);
+        }
+    }, [latitude, height, setPosition]);
 
     const handleHeight = useCallback((newVal: string) => {
         const num = parseFloat(newVal);
-        if (!isNaN(num) && latitude && longitude) {
-            const newPosition = Cartesian3.fromDegrees(longitude, latitude, num);
-            onChange && onChange(newPosition);
+        if (!isNaN(num) && latitude !== undefined && longitude !== undefined) {
+            setPosition(latitude, longitude, num);
         }
-    }, [latitude, longitude, onChange]);
+    }, [latitude, longitude, setPosition]);
 
-    if (!latitude || !longitude) {
+    if (!isEditable && (latitude === undefined || longitude === undefined)) {
         return undefined;
+    }
+
+    if (latitude === undefined || longitude === undefined) {
+        return (<div>
+            Position is not set
+        </div>);
+    }
+
+    if (isEditable) {
+        return (
+            <div class={'position-fld position-fld-edit'}>
+                <InputField key={'position-lat'} label={'latitude'} fixed={6} value={latitude}
+                    wheelStep={0.000001} onChange={handleLatitude} />
+                <InputField key={'position-lon'} label={'longitude'} fixed={6} value={longitude}
+                    wheelStep={0.000001} onChange={handleLongitude} />
+                <InputField  key={'position-h'} label={'height (m)'} fixed={3} value={height}
+                    wheelStep={1} onChange={handleHeight} />
+            </div>
+        );
     }
 
     return (
@@ -52,4 +92,3 @@ export function PositionFld({entity, onChange}: PositionFldProps) {
 function toDegrees(val?: number) {
     return val !== undefined ? (val * 180 / Math.PI) : undefined;
 }
-
