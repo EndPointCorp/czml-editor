@@ -110,6 +110,7 @@ export async function tilesetFromZip(
         mainPath: mainPathForTileset(tilesetPath, name),
         files: filesRelativeToTilesetRoot(archive.blobs, tilesetPath),
         rootUri,
+        fileName: file instanceof File ? file.name : undefined,
     };
     registerTilesetSource(source, [tilesetPath]);
 

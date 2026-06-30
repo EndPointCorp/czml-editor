@@ -24,6 +24,8 @@ import { PropertyMeta } from './meta/meta';
 import { makeChangesSnapshot, StyleChanges, trackChange } from '../geometry-editor/changes-tracker';
 import { pathMetaData } from './meta/path-meta';
 import { pointMetaData } from './meta/point-meta';
+import { displayTilesetUri } from '../czml-ext/model-name';
+import { getResourceByPath } from '../czml-ext/writers/field-image-writer';
 
 export type EntityEditorProps = {
     entity: Entity | null;
@@ -86,7 +88,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
                     onChange={handleNameInput} />
 
                 {tileset && <div>
-                    <div>{ '' + tileset.uri }</div>
+                    <div>{ displayTilesetUri(getResourceByPath(entity, ['tileset', 'uri']) ?? '') }</div>
                     <button>Replace</button>
                 </div>}
                 

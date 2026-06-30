@@ -1,5 +1,6 @@
 import { Entity, Resource } from "cesium";
 import { getResourceByPath } from "./writers/field-image-writer";
+import { findTilesetSource } from "./tileset-source-registry";
 
 export function modelNameFromFileName(filename: string): string {
     const base = filename.replace(/^.*[/\\]/, '');
@@ -23,6 +24,29 @@ export function tilesetNameFromUri(uri: string | Resource): string {
         return modelNameFromFileName(dirMatch[1]);
     }
     return modelNameFromFileName(pathPart);
+}
+
+/**
+ * Formats a tileset URI for display in the editor. Internal data URIs (base64)
+ * are shown as "Binary Data" and blob URIs as "Uploaded Data", or
+ * "Uploaded: <Filename>" when the original upload file name is known.
+ */
+export function displayTilesetUri(uri: string | Resource): string {
+    const resource = typeof uri === 'string' ? new Resource(uri) : uri;
+
+    if (resource.isDataUri) {
+        return 'Binary Data';
+    }
+
+    if (resource.isBlobUri) {
+        const source = findTilesetSource(resource);
+        if (source?.fileName) {
+            return `Uploaded: ${source.fileName}`;
+        }
+        return 'Uploaded Data';
+    }
+
+    return resource.url;
 }
 
 export function applyModelEntityNames(entities: Entity[]) {

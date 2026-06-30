@@ -11,6 +11,8 @@ export type TilesetSource = {
     mainPath: string;
     files: TilesetSourceFile[];
     rootUri: string;
+    /** Original name of the uploaded archive file, when available. */
+    fileName?: string;
 };
 
 const registry = new Map<string, TilesetSource>();
