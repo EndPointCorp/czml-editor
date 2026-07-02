@@ -9,6 +9,13 @@ const cesiumBaseUrl = "cesiumStatic";
 
 export default defineConfig({
   base: './',
+  optimizeDeps: {
+    // Only scan the app entry for deps. Without this Vite defaults to globbing
+    // "**/*.html", which includes self-contained files in public/ (e.g.
+    // building.html) that rely on browser import maps + CDN bare imports and
+    // would otherwise fail to resolve (three, three/addons/...).
+    entries: ['index.html'],
+  },
   build: {
     rollupOptions: {
       output: {
