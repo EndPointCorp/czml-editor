@@ -8,6 +8,7 @@ import { EditorContext } from "../editor";
 import { CreateEntityInputMode } from "../../geometry-editor/input-new-entity";
 import { ViewerContext } from "../../app";
 import { CreateModel } from "./create-model";
+import { CreateTileset } from "./create-tileset";
 
 import "./create-section.css"
 import cls from "../../misc/cls";
@@ -74,13 +75,15 @@ export function CreateEntitySection({onEntityCreated}: CreateEntitySectionProps)
     const polygonActive = activeType === 'polygon';
     const polylineActive = activeType === 'polyline';
     const modelActive = activeType === CreateEntityInputMode.model;
+    const tilesetActive = activeType === CreateEntityInputMode.tileset;
 
     const allEnabled = activeType === undefined;
 
     const billboardDisabled = !allEnabled && !billboardActive;
     const polylineDisabled = !allEnabled  && !polylineActive;
     const polygonDisabled = !allEnabled  && !polygonActive;
-    const modelDisabled = !allEnabled  && !modelActive
+    const modelDisabled = !allEnabled  && !modelActive;
+    const tilesetDisabled = !allEnabled && !tilesetActive;
 
     return (
         <Portal rootId={'viewer-tools'}>
@@ -96,6 +99,9 @@ export function CreateEntitySection({onEntityCreated}: CreateEntitySectionProps)
                         disabled={polygonDisabled} setActiveType={handleActiveTypeSet} {...{onEntityCreated}} />}
                     
                     {!modelDisabled && <CreateModel active={modelActive}
+                        disabled={!allEnabled} setActiveType={handleActiveTypeSet} /> }
+
+                    {!tilesetDisabled && <CreateTileset active={tilesetActive}
                         disabled={!allEnabled} setActiveType={handleActiveTypeSet} /> }
                 </div>
             </Section>

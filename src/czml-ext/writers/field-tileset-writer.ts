@@ -1,4 +1,5 @@
 import { Entity, Property, Resource } from "cesium";
+import { findTilesetSource, TilesetSource } from "../tileset-source-registry";
 import { getResourceByPath } from "./field-image-writer";
 import { WriterContext } from "../export-czml";
 import { writeScalar } from "./field-writers";
@@ -17,7 +18,7 @@ export function writeTilesetUri(prop: Property, ctx: WriterContext) {
     if (val === undefined || val === null || val.reference) return val;
 
     const url = toResourceUrl(val);
-    const exported = url && ctx.exportedTilesets?.[url];
+    const exported = findExportedTileset(ctx.exportedTilesets, url);
     if (exported) {
         return exported.targetPath;
     }
@@ -31,7 +32,20 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
 
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['tileset', 'uri']);
-        if (!resource || exportMap[resource.url]) {
+        if (!resource || findExportedTileset(exportMap, resource.url)) {
+            continue;
+        }
+
+        const source = findTilesetSource(resource);
+        if (source) {
+            const files: Record<string, Blob> = {};
+            for (const file of source.files) {
+                files[file.path] = file.blob;
+            }
+            addTilesetExportEntry(exportMap, resource, source, {
+                targetPath: source.mainPath,
+                files,
+            });
             continue;
         }
 
@@ -44,7 +58,7 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
 
         try {
             const files = await collectTilesetFiles(resource);
-            exportMap[resource.url] = { targetPath, files };
+            addTilesetExportEntry(exportMap, resource, undefined, { targetPath, files });
         } catch {
             console.warn('failed to export tileset', resource.url);
         }
@@ -53,8 +67,44 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
     return exportMap;
 }
 
+function findExportedTileset(
+    exportedTilesets: TilesetExport | undefined,
+    url: string | undefined,
+): TilesetExportEntry | undefined {
+    if (!exportedTilesets || !url) {
+        return undefined;
+    }
+
+    const direct = exportedTilesets[url];
+    if (direct) {
+        return direct;
+    }
+
+    const source = findTilesetSource(url);
+    if (source) {
+        return exportedTilesets[source.mainPath]
+            ?? exportedTilesets[source.rootUri];
+    }
+
+    return undefined;
+}
+
+function addTilesetExportEntry(
+    exportMap: TilesetExport,
+    resource: Resource,
+    source: TilesetSource | undefined,
+    entry: TilesetExportEntry,
+) {
+    exportMap[resource.url] = entry;
+    if (source) {
+        exportMap[source.rootUri] = entry;
+        exportMap[source.mainPath] = entry;
+    }
+}
+
 async function collectTilesetFiles(rootResource: Resource): Promise<Record<string, Blob>> {
     const files: Record<string, Blob> = {};
+    const blobUriToRelPath = new Map<string, string>();
     const queue: { resource: Resource; zipPath: string }[] = [
         { resource: rootResource, zipPath: 'tileset.json' },
     ];
@@ -83,17 +133,65 @@ async function collectTilesetFiles(rootResource: Resource): Promise<Record<strin
                 : '';
 
             for (const uri of uris) {
-                if (/^https?:|^data:|^blob:/i.test(uri)) {
+                const childZipPath = joinRelative(baseDir, uri);
+
+                if (/^blob:/i.test(uri)) {
+                    try {
+                        const childBlob = await fetch(uri).then(response => response.blob());
+                        files[childZipPath] = childBlob;
+                        blobUriToRelPath.set(uri, childZipPath);
+                    }
+                    catch {
+                        console.warn('failed to fetch tileset child blob', uri);
+                    }
                     continue;
                 }
-                const childZipPath = joinRelative(baseDir, uri);
+
+                if (/^https?:|^data:/i.test(uri)) {
+                    continue;
+                }
+
                 const childResource = resource.getDerivedResource({ url: uri });
                 queue.push({ resource: childResource, zipPath: childZipPath });
             }
         }
     }
 
+    if (files['tileset.json'] && blobUriToRelPath.size > 0) {
+        const json = JSON.parse(await files['tileset.json'].text());
+        replaceUrisInJson(json, uri => blobUriToRelPath.get(uri) ?? (
+            /^blob:|^https?:|^data:/i.test(uri) ? undefined : uri
+        ));
+        files['tileset.json'] = new Blob(
+            [JSON.stringify(json)],
+            { type: 'application/json' },
+        );
+    }
+
     return files;
+}
+
+function replaceUrisInJson(
+    node: unknown,
+    remap: (uri: string) => string | undefined,
+) {
+    if (!node || typeof node !== 'object') {
+        return;
+    }
+    if (Array.isArray(node)) {
+        node.forEach(item => replaceUrisInJson(item, remap));
+        return;
+    }
+    for (const [key, val] of Object.entries(node)) {
+        if (key === 'uri' && typeof val === 'string') {
+            const next = remap(val);
+            if (next !== undefined) {
+                (node as Record<string, unknown>)[key] = next;
+            }
+        } else if (val && typeof val === 'object') {
+            replaceUrisInJson(val, remap);
+        }
+    }
 }
 
 function collectUris(obj: unknown, uris: Set<string>) {

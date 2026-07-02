@@ -4,9 +4,10 @@ import { labelMetadata } from "./label-meta";
 import { polylineMetaData } from "./polyline-meta";
 import { polygonMetaData } from "./polygon-meta";
 import { modelMetaData } from "./model-meta";
+import { tilesetMetaData } from "./tileset-meta";
 
 
-export const types = ['billboard', 'label', 'polyline', 'polygon', 'model'] as const;
+export const types = ['billboard', 'label', 'polyline', 'polygon', 'model', 'tileset'] as const;
 
 type Constructor<T = any> = new (...args: any[]) => T;
 
@@ -90,6 +91,7 @@ export const metaByType = {
     polyline: polylineMetaData,
     polygon: polygonMetaData,
     model: modelMetaData,
+    tileset: tilesetMetaData,
 };
 
 export type TypeMetaKey = keyof typeof metaByType;

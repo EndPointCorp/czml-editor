@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Generic 6-Story Mixed-Use (three.js)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #eee; overflow: hidden; }
+      #ui {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        padding: 8px 10px;
+        font: 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        cursor: pointer;
+      }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="ui">
+  <button id="btnExport">⬇ Export GLB</button>
+  <button id="btnWire">Toggle Wireframe</button>
+</div>
+
+    <script type="importmap">
+			{
+        "imports": {
+          "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/"
+        }
+      }
+		</script>
+
+    <script type="module">
+      import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
+
+// ─── Renderer ────────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(devicePixelRatio);
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+// ─── Scene / Camera ──────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1a2e);
+scene.fog = new THREE.Fog(0x1a1a2e, 60, 120);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(28, 22, 38);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 10, 0);
+controls.update();
+
+// ─── Lights ───────────────────────────────────────────────────────────────────
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const sun = new THREE.DirectionalLight(0xfff4e0, 1.1);
+sun.position.set(30, 50, 20);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+// ─── Procedural Texture Helpers ──────────────────────────────────────────────
+function makeCanvas(w, h) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  return c;
+}
+
+/** Facade texture: concrete wall + grid of windows */
+function makeFacadeTexture(cols, rows) {
+  const TW = 256, TH = 512;
+  const c = makeCanvas(TW, TH);
+  const ctx = c.getContext("2d");
+
+  // Wall base – warm concrete
+  ctx.fillStyle = "#b8a990";
+  ctx.fillRect(0, 0, TW, TH);
+
+  // // Subtle noise pass
+  // for (let i = 0; i < 2000; i++) {
+  //   const x = Math.random() * TW, y = Math.random() * TH;
+  //   const v = Math.floor(Math.random() * 30 - 15);
+  //   ctx.fillStyle = `rgba(${128+v},${110+v},${90+v},0.15)`;
+  //   ctx.fillRect(x, y, 3, 3);
+  // }
+
+  const padX = TW * 0.12, padY = TH * 0.08;
+  const cellW = (TW - padX * 2) / cols;
+  const cellH = (TH - padY * 2) / rows;
+  const winW = cellW * 0.52, winH = cellH * 0.55;
+
+  for (let r = 0; r < rows; r++) {
+    for (let cc = 0; cc < cols; cc++) {
+      const cx = padX + cc * cellW + cellW / 2;
+      const cy = padY + r * cellH + cellH * 0.3;
+      const wx = cx - winW / 2, wy = cy - winH / 2;
+
+      // Frame
+      ctx.fillStyle = "#8a7a6a";
+      ctx.fillRect(wx - 2, wy - 2, winW + 4, winH + 4);
+
+      // Glass
+      const grad = ctx.createLinearGradient(wx, wy, wx + winW, wy + winH);
+      const lit = false;//Math.random() > 0.45;
+      if (lit) {
+        grad.addColorStop(0, "#ffe9a0");
+        grad.addColorStop(1, "#ffcc44");
+      } else {
+        grad.addColorStop(0, "#3a4a5a");
+        grad.addColorStop(1, "#1e2a36");
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(wx, wy, winW, winH);
+
+      // Cross divider
+      ctx.strokeStyle = "#8a7a6a";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx, wy); ctx.lineTo(cx, wy + winH);
+      ctx.moveTo(wx, cy); ctx.lineTo(wx + winW, cy);
+      ctx.stroke();
+
+      // Sill
+      ctx.fillStyle = "#a09080";
+      ctx.fillRect(wx - 3, wy + winH, winW + 6, 4);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+/** Door texture */
+function makeDoorTexture() {
+  const c = makeCanvas(128, 256);
+  const ctx = c.getContext("2d");
+
+  ctx.fillStyle = "#b8a990";
+  ctx.fillRect(0, 0, 128, 256);
+
+  // Door frame
+  ctx.fillStyle = "#5a4a3a";
+  ctx.fillRect(20, 40, 88, 216);
+
+  // Door panels
+  ctx.fillStyle = "#4a3a2a";
+  [[26, 46, 76, 80], [26, 136, 76, 80]].forEach(([x, y, w, h]) => {
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = "#6a5a4a";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+  });
+
+  // Knob
+  ctx.beginPath();
+  ctx.arc(92, 180, 5, 0, Math.PI * 2);
+  ctx.fillStyle = "#cca030";
+  ctx.fill();
+
+  // Step
+  ctx.fillStyle = "#a09080";
+  ctx.fillRect(14, 252, 100, 4);
+
+  return new THREE.CanvasTexture(c);
+}
+
+/** Roof / top trim texture */
+function makeRoofTexture() {
+  const c = makeCanvas(64, 64);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#707070";
+  ctx.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < 300; i++) {
+    const x = Math.random() * 64, y = Math.random() * 64;
+    ctx.fillStyle = `rgba(0,0,0,${Math.random() * 0.2})`;
+    ctx.fillRect(x, y, 2, 2);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 4);
+  return tex;
+}
+
+// ─── Building Construction ────────────────────────────────────────────────────
+const buildingGroup = new THREE.Group();
+scene.add(buildingGroup);
+
+const FLOORS = 8;
+const FLOOR_H = 3.2;
+const W = 10, D = 8;        // width, depth
+const TOTAL_H = FLOORS * FLOOR_H;
+
+// Materials
+const facadeTex = makeFacadeTexture(3, FLOORS);
+const facadeMat = new THREE.MeshLambertMaterial({ map: facadeTex });
+
+const facadeTexSide = makeFacadeTexture(2, FLOORS);
+const facadeSideMat = new THREE.MeshLambertMaterial({ map: facadeTexSide });
+
+const roofMat = new THREE.MeshLambertMaterial({ map: makeRoofTexture() });
+const doorTex = makeDoorTexture();
+const doorMat = new THREE.MeshLambertMaterial({ map: doorTex });
+const concreteMat = new THREE.MeshLambertMaterial({ color: 0xb8a990 });
+const trimMat = new THREE.MeshLambertMaterial({ color: 0x8a7a6a });
+
+/** Build one box face with a specific material */
+function addFace(group, geo, mat, pos, rot) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(...pos);
+  if (rot) m.rotation.set(...rot);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  group.add(m);
+  return m;
+}
+
+// Main body – use BoxGeometry with per-face materials
+// faces order: +x, -x, +y, -y, +z, -z
+const bodyGeo = new THREE.BoxGeometry(W, TOTAL_H, D);
+const bodyMats = [
+  facadeSideMat, facadeSideMat, // sides
+  roofMat, concreteMat,         // top, bottom
+  facadeMat, facadeMat,         // front, back
+];
+const body = new THREE.Mesh(bodyGeo, bodyMats);
+body.position.set(0, TOTAL_H / 2, 0);
+body.castShadow = true;
+body.receiveShadow = true;
+buildingGroup.add(body);
+
+const floor_div_offset = 0;
+// Floor separators (horizontal trim bands)
+for (let f = 1; f <= FLOORS + 1; f++) {
+  const y = f * ( FLOOR_H * 0.84 )+ floor_div_offset;
+  const bandGeo = new THREE.BoxGeometry(W + 0.15, 0.18, D + 0.15);
+  const band = new THREE.Mesh(bandGeo, trimMat);
+  band.position.set(0, y, 0);
+  buildingGroup.add(band);
+}
+
+// Roof parapet
+const parapetH = 0.9;
+const parapetGeo = new THREE.BoxGeometry(W + 0.3, parapetH, D + 0.3);
+const innerGeo  = new THREE.BoxGeometry(W - 0.5, parapetH + 0.1, D - 0.5);
+// Hollow parapet via 4 thin walls
+const parapetY = TOTAL_H + parapetH / 2;
+[
+  [0, parapetY, -(D / 2 + 0.15), W + 0.3, parapetH, 0.3],
+  [0, parapetY,  (D / 2 + 0.15), W + 0.3, parapetH, 0.3],
+  [-(W / 2 + 0.15), parapetY, 0, 0.3, parapetH, D + 0.3],
+  [ (W / 2 + 0.15), parapetY, 0, 0.3, parapetH, D + 0.3],
+].forEach(([x, y, z, pw, ph, pd]) => {
+  const g = new THREE.BoxGeometry(pw, ph, pd);
+  const m = new THREE.Mesh(g, trimMat);
+  m.position.set(x, y, z);
+  buildingGroup.add(m);
+});
+
+// Roof slab
+const roofSlab = new THREE.Mesh(new THREE.BoxGeometry(W - 0.2, 0.25, D - 0.2), roofMat);
+roofSlab.position.set(0, TOTAL_H + 0.12, 0);
+buildingGroup.add(roofSlab);
+
+// Small rooftop utility box (stairwell exit)
+const stairboxMat = new THREE.MeshLambertMaterial({ color: 0x909090 });
+const stairBox = new THREE.Mesh(new THREE.BoxGeometry(3, 2.2, 2.5), stairboxMat);
+stairBox.position.set(-2, TOTAL_H + parapetH + 1.1, 0);
+buildingGroup.add(stairBox);
+
+// Door (front face, ground floor)
+const doorW = 1.2, doorH = 2.4;
+const doorMesh = new THREE.Mesh(new THREE.PlaneGeometry(doorW, doorH), doorMat);
+doorMesh.position.set(0, doorH / 2, D / 2 + 0.02);
+buildingGroup.add(doorMesh);
+
+// Entrance canopy
+const canopyMat = new THREE.MeshLambertMaterial({ color: 0x4a4a4a, side: THREE.DoubleSide });
+const canopy = new THREE.Mesh(new THREE.BoxGeometry(3.5, 0.15, 1.5), canopyMat);
+canopy.position.set(0, 2.8, D / 2 + 0.75);
+buildingGroup.add(canopy);
+// Canopy supports
+[-1.5, 1.5].forEach(x => {
+  const post = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.8, 0.1), stairboxMat);
+  post.position.set(x, 1.4, D / 2 + 1.4);
+  buildingGroup.add(post);
+});
+
+// Corner vertical trim
+const cornerH = TOTAL_H + parapetH;
+[[-W/2, D/2], [W/2, D/2], [-W/2, -D/2], [W/2, -D/2]].forEach(([cx, cz]) => {
+  const corner = new THREE.Mesh(new THREE.BoxGeometry(0.2, cornerH, 0.2), trimMat);
+  corner.position.set(cx, cornerH / 2, cz);
+  buildingGroup.add(corner);
+});
+
+// ─── Ground Plane ─────────────────────────────────────────────────────────────
+// const groundGeo = new THREE.PlaneGeometry(80, 80);
+// const groundMat = new THREE.MeshLambertMaterial({ color: 0x3a3a3a });
+// const ground = new THREE.Mesh(groundGeo, groundMat);
+// ground.rotation.x = -Math.PI / 2;
+// ground.receiveShadow = true;
+// scene.add(ground);
+
+// Sidewalk
+// const walkMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+// const walk = new THREE.Mesh(new THREE.BoxGeometry(W + 6, 0.1, D + 5), walkMat);
+// walk.position.set(0, 0.05, 0);
+// scene.add(walk);
+
+// ─── Wireframe Toggle ─────────────────────────────────────────────────────────
+let wireframe = false;
+document.getElementById("btnWire").addEventListener("click", () => {
+  wireframe = !wireframe;
+  buildingGroup.traverse(obj => {
+    if (obj.isMesh) {
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach(m => { m.wireframe = wireframe; });
+    }
+  });
+});
+
+// ─── GLB Export ───────────────────────────────────────────────────────────────
+document.getElementById("btnExport").addEventListener("click", () => {
+  const exporter = new GLTFExporter();
+  exporter.parse(
+    buildingGroup,
+    (buffer) => {
+      const blob = new Blob([buffer], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "apartment_building.glb";
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    { binary: true, embedImages: true }
+  );
+});
+
+// ─── Render Loop ──────────────────────────────────────────────────────────────
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+(function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+})();
+    </script>
+  </body>
+</html>

@@ -18,6 +18,18 @@
     display: inline-block;
 }
 
+.position-fld-edit {
+    padding-right: 2em;
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+}
+
+.position-fld-edit  {
+    display: flex;
+    flex-direction: row;
+}
+
 #entity-editor .subsection {
     margin-left: -0.25em;
     margin-right: 0.25em;

@@ -1,4 +1,4 @@
-import { Cartesian3, Cartographic, ConstantPositionProperty, ConstantProperty, Entity, PolygonHierarchy, Property, ScreenSpaceEventHandler, ScreenSpaceEventType, Viewer } from "cesium";
+import { Cartesian3, Cartographic, Cesium3DTileset, ConstantPositionProperty, ConstantProperty, Entity, PolygonHierarchy, Property, ScreenSpaceEventHandler, ScreenSpaceEventType, Viewer, defined } from "cesium";
 import { getPickCoordinates } from "./pick-coordinates";
 
 export type DragEndCB = () => void;
@@ -122,33 +122,46 @@ export class PositionDragController {
     }
     
     mouseDown(e: ScreenSpaceEventHandler.PositionedEvent) {
-        const pick = this.viewer.scene.pick(e.position);
-    
-        if (this.state && pick && this.state.pick(pick)) {
+        if (!this.state) {
+            return;
+        }
+
+        const picks = this.viewer.scene.drillPick(e.position);
+        const matched = picks.some(pick => this.state!.pick(pick));
+
+        if (matched) {
             this.state.picked = true;
 
             this.disableDefaultControls();
 
-            const cartesian = getPickCoordinates(this.viewer, e.position);
+            const entityPosition = this.state.getEntityPosition();
+            const cartesian = getPickCoordinates(this.viewer, e.position)
+                ?? Cartographic.toCartesian(entityPosition);
 
-            if (cartesian) {
-                this.state.mouseDownPosition = Cartographic.fromCartesian(cartesian);
-                this.state.mouseDownEntityPosition = this.state.getEntityPosition();
-            }
+            this.state.mouseDownPosition = Cartographic.fromCartesian(cartesian);
+            this.state.mouseDownEntityPosition = entityPosition;
         }
     }
     
 
-    attachToEntity(entity: Entity, getter: PositionGetter, setter: PositionSetter, onDragEnd?: DragEndCB) {
+    attachToEntity(
+        entity: Entity,
+        getter: PositionGetter,
+        setter: PositionSetter,
+        onDragEnd?: DragEndCB,
+    ) {
+        const viewer = this.viewer;
         const state = {
             picked: false,
             entity: entity,
             initialPosition: Cartographic.fromCartesian(getter()),
             mouseDownPosition: null,
             mouseDownEntityPosition: null,
-            pick: (pick: any) => {
-                return pick.id === entity;
-            },
+            pick: (pick: any) => entityMatchesPick(
+                pick,
+                entity,
+                entity.tileset ? findEntityTilesetPrimitive(viewer, entity) : undefined,
+            ),
             getter,
             getEntityPosition: function() {
                 return Cartographic.fromCartesian(this.getter());
@@ -185,6 +198,47 @@ export class PositionDragController {
         this.state = null;
         this.enableDefaultControls();
     }
+}
+
+function findEntityTilesetPrimitive(viewer: Viewer, entity: Entity): Cesium3DTileset | undefined {
+    const primitives = viewer.scene.primitives;
+    for (let i = 0; i < primitives.length; i++) {
+        const primitive = primitives.get(i);
+        if (primitive instanceof Cesium3DTileset && (primitive as Cesium3DTileset & { id?: Entity }).id === entity) {
+            return primitive;
+        }
+    }
+    return undefined;
+}
+
+function entityMatchesPick(
+    pick: any,
+    entity: Entity,
+    tilesetPrimitive?: Cesium3DTileset,
+): boolean {
+    if (!defined(pick)) {
+        return false;
+    }
+    if (pick.id === entity) {
+        return true;
+    }
+    if (!entity.tileset) {
+        return false;
+    }
+
+    const tileset = pick.primitive instanceof Cesium3DTileset
+        ? pick.primitive
+        : pick.tileset;
+    if (!(tileset instanceof Cesium3DTileset)) {
+        return false;
+    }
+
+    const tilesetWithId = tileset as Cesium3DTileset & { id?: Entity };
+    if (tilesetWithId.id === entity) {
+        return true;
+    }
+
+    return tilesetPrimitive !== undefined && tileset === tilesetPrimitive;
 }
 
 function toCartographic(p: Cartesian3) {

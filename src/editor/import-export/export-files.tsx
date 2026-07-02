@@ -88,7 +88,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             
             if (archived) {
                 const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
-                await zipWriter.add('document.czml', new TextReader(czmlText));
+                await zipWriter.add(`${baseName}.czml`, new TextReader(czmlText));
         
                 if (exportedImages) {
                     for (const { targetPath, img } of Object.values(exportedImages)) {

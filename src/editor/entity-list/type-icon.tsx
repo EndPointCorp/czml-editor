@@ -11,7 +11,8 @@ const typeIcons = {
     polygon: polygonSvg,
     polyline: polylineSvg,
     folder: folderSvg,
-    model: modelSvg
+    model: modelSvg,
+    tileset: modelSvg,
 }
 
 type TypeIconProps = {

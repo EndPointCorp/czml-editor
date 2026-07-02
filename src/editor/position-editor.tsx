@@ -1,4 +1,4 @@
-import { Cartesian3, ConstantPositionProperty, Entity } from "cesium"
+import { Cartesian3, Cartographic, ConstantPositionProperty, Entity } from "cesium"
 import { LabledSwitch } from "../misc/elements/labled-switch"
 import { useCallback, useContext, useState } from "preact/hooks"
 import { EditorContext } from "./editor"
@@ -67,16 +67,26 @@ export function PositionEditor({entity}: PositionEditorProps) {
     }, [activate, deActivate, moveController, entity]);
 
     const handleFldChange = useCallback((val: Cartesian3) => {
-        if(entity.position && entity.position.isConstant) {
+        if (entity.position && entity.position.isConstant) {
             (entity.position as ConstantPositionProperty).setValue(val);
-            handlePositionChanged();
+        } else if (entity.model || entity.tileset) {
+            entity.position = new ConstantPositionProperty(val);
         }
+        handlePositionChanged();
     }, [entity, handlePositionChanged]);
 
     return (
-        <div class={'entity-position'} key={`position-${entity.id}-${positionTick}`}>
+        <div class={'entity-position'} key={`position-${entity.id}`}>
             <h4><span>Position</span> <button onClick={handleFlyTo} class={'fly-to-button'}>Flyto</button></h4>
-            <PositionFld entity={entity} onChange={handleFldChange} />
+            <PositionFld key={'editor-position-fld'} entity={entity} onChange={handleFldChange} />
+            {
+            <button key={`position-unset-${entity.id}-${positionTick}`} 
+                onClick={() => {entity.position = undefined; console.log(entity); handlePositionChanged();}}>Set to empty</button>
+            }
+            {/* 
+            <button key={`position-zero-${entity.id}-${positionTick}`} 
+                onClick={() => {entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0.0, 0.0, 0.0)); handlePositionChanged();}}>Set to 0</button> 
+            */}
             <LabledSwitch checked={active} onChange={handleActiveChange}
                 label={'Drag to move'}></LabledSwitch>
         </div>

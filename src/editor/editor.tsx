@@ -16,7 +16,9 @@ import { CreateEntitySection } from './create/create-section';
 import { FilesSection } from './import-export/files-section';
 import { types } from './meta/meta';
 import { StyleCopyDialogue } from './style-copy-dialogue';
-import { applyModelEntityNames } from '../czml-ext/model-name';
+import { applyModelEntityNames, applyTilesetEntityNames } from '../czml-ext/model-name';
+import { CzmlDataSourceExtension } from '../czml-ext/czml-ds-ext';
+import { CesiumDataSource } from './import-export/files-section';
 
 
 export type EditorContextT = {
@@ -77,8 +79,10 @@ export function Editor() {
         console.log('select entity', entity);
     }, [setSelectedEntity]);
 
-    const handleDsLoad = useCallback((newEntities: Entity[]) => {
+    const handleDsLoad = useCallback((newEntities: Entity[], dataSource: CesiumDataSource, _file: File) => {
         applyModelEntityNames(newEntities);
+        applyTilesetEntityNames(newEntities);
+        CzmlDataSourceExtension.registerTilesetSources(dataSource, newEntities);
         const allEntities = [...entities, ...newEntities];
         
         updateExtra(extra, allEntities);
@@ -107,6 +111,7 @@ export function Editor() {
         console.log('Entity created', newEntity);
 
         applyModelEntityNames([newEntity]);
+        applyTilesetEntityNames([newEntity]);
         const allEntities = [...entities, newEntity];
 
         updateExtra(extra, allEntities);
