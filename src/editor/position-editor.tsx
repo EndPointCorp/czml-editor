@@ -1,4 +1,4 @@
-import { Cartesian3, Cartographic, ConstantPositionProperty, Entity } from "cesium"
+import { Cartesian3, ConstantPositionProperty, Entity } from "cesium"
 import { LabledSwitch } from "../misc/elements/labled-switch"
 import { useCallback, useContext, useState } from "preact/hooks"
 import { EditorContext } from "./editor"
