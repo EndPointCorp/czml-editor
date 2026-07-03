@@ -1,5 +1,6 @@
 import { ConstantProperty, Entity, Property, Resource } from "cesium";
 import { ExportOptions, WriterContext } from "../export-czml";
+import { makeUniqueFilename } from "../export-filename";
 import { writeScalar } from "./field-writers";
 import { blobToBase64 } from "../../misc/file-to-base64";
 
@@ -87,6 +88,7 @@ export async function exportImages(imgs: ResourcesMap, options: ExportOptions) {
     const {exportImagesPath = ''} = options;
 
     const counter = {n: 1};
+    const usedPaths = new Set<string>();
 
     let result: ImageExport = {};
 
@@ -97,7 +99,7 @@ export async function exportImages(imgs: ResourcesMap, options: ExportOptions) {
 
         try {
             const img = await resource.fetchImage();
-            const targetPath = exportImagesPath + name;
+            const targetPath = makeUniqueFilename(exportImagesPath + name, usedPaths);
 
             if (img) {
                 result = {
@@ -135,10 +137,11 @@ export type ImageRefMap = {
 export function exportImageNames(imgs: ResourcesMap, options: ExportOptions): ImageRefMap {
     const {exportImagesPath = ''} = options;
     const counter = {n: 1};
+    const usedPaths = new Set<string>();
 
     const result: ImageRefMap = {};
     for (const [url] of Object.entries(imgs)) {
-        result[url] = exportImagesPath + imageFileName(url, counter);
+        result[url] = makeUniqueFilename(exportImagesPath + imageFileName(url, counter), usedPaths);
     }
 
     return result;

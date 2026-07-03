@@ -2,7 +2,12 @@ import * as Cesium from "cesium";
 
 
 const getParams = new URLSearchParams(window.location.search);
-Cesium.GoogleMaps.defaultApiKey = getParams.get('google_key') || 'AIzaSyCgjboUOBS_g9VjVZnTaRTg9dvfHDiZJ4k';
+const googleApiKey = getParams.get('google_key') || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+if (googleApiKey) {
+    Cesium.GoogleMaps.defaultApiKey = googleApiKey;
+} else {
+    console.warn('No Google Maps API key provided. Set VITE_GOOGLE_MAPS_API_KEY or pass ?google_key=<key>.');
+}
 
 
 export function switchGoogleGlobeOn(viewer: Cesium.Viewer) {

@@ -176,11 +176,19 @@ export function accessorForProperty(property: string) {
                 : e.properties?.getValue()[property]},
     }
 }
+const IDENT_RE = /^[A-Za-z_$][\w$]*$/;
+
 function dynamicAccessor(formula: string, args: string[]) {
+    for (const arg of args) {
+        if (!IDENT_RE.test(arg)) {
+            throw new SyntaxError(`Invalid attribute name: "${arg}"`);
+        }
+    }
+
     const substitutions = Object.fromEntries(args.map(arg => {
         return (arg === 'name') 
             ? [arg, `entity.name`]
-            : [arg, `properties?.["${arg}"]`]
+            : [arg, `properties?.[${JSON.stringify(arg)}]`]
     }));
     const fBody = evaluateVariableString(formula, substitutions);
     

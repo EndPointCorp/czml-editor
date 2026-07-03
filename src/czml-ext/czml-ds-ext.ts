@@ -18,7 +18,7 @@ export class CzmlDataSourceExtension extends CzmlDataSource {
 
     static load: typeof CzmlDataSource.load = async function (czml: Resource | Blob | string | any, options?: CzmlDataSource.LoadOptions) {
         
-        if (CzmlDataSourceExtension.iszip(czml)) {
+        if (await CzmlDataSourceExtension.iszip(czml)) {
             const file = await fetchBlob(czml);
             if (file) {
                 const archive = await unpackZipArchive(file);
@@ -67,26 +67,31 @@ export class CzmlDataSourceExtension extends CzmlDataSource {
         return CzmlDataSourceExtension.__load(czml, options);
     }
 
-    static iszip(src: Resource | Blob | string | any) {
-
+    static async iszip(src: Resource | Blob | string | any): Promise<boolean> {
         if (typeof src === 'string') {
-            return /\.(czmz|zip)&/.test(new URL(src).pathname) 
+            return ZIP_EXT_RE.test(pathnameOf(src));
         }
 
         if (src instanceof Blob) {
-            return src.type.match(/zip/i);
+            if (src.type && /zip/i.test(src.type)) {
+                return true;
+            }
+            return await isZipBlob(src);
         }
 
         if (src instanceof Resource) {
             if (src.isDataUri) {
-                const url  = src.url;
+                const url = src.url;
                 const mime = url.substring(url.indexOf(":") + 1, url.indexOf(";"));
                 return mime.indexOf('zip') >= 0;
             }
-            
+
             if (src.isBlobUri) {
-                return true;
+                const blob = await src.fetchBlob();
+                return blob ? await isZipBlob(blob) : false;
             }
+
+            return ZIP_EXT_RE.test(pathnameOf(src.url));
         }
 
         return false;
@@ -100,4 +105,26 @@ async function fetchBlob(czml: Resource | Blob | string | any) {
 
     const resource = new Resource(czml);
     return await resource.fetchBlob();
+}
+
+const ZIP_EXT_RE = /\.(czmz|zip)$/i;
+
+function pathnameOf(url: string): string {
+    try {
+        return new URL(url, window.location.href).pathname;
+    } catch {
+        return url;
+    }
+}
+
+async function isZipBlob(blob: Blob): Promise<boolean> {
+    try {
+        const head = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+        // ZIP local-file-header magic: PK\x03\x04, empty-archive: PK\x05\x06, spanned: PK\x07\x08
+        return head[0] === 0x50 && head[1] === 0x4b
+            && (head[2] === 0x03 || head[2] === 0x05 || head[2] === 0x07)
+            && (head[3] === 0x04 || head[3] === 0x06 || head[3] === 0x08);
+    } catch {
+        return false;
+    }
 }

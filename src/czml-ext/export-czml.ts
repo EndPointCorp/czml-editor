@@ -246,7 +246,7 @@ export async function entityToPacket(entity: Entity, ctx: WriterContext) {
 
     // * @property [cylinder] - A cylinder to associate with this entity.
     if (entity.cylinder) {
-        packet.box = await writeCylinder(entity.cylinder, {...ctx, path: ['cylinder']});
+        packet.cylinder = await writeCylinder(entity.cylinder, {...ctx, path: ['cylinder']});
     }
 
 

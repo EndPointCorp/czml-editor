@@ -9,11 +9,13 @@ import { buildImagesMap } from "./writers/field-image-writer";
 
 export type KmlExternalFiles = Record<string, Blob>;
 
+type KmlExternalFilesInput = Record<string, Blob | Promise<Blob | undefined>>;
+
 export function createKmlModelCallback(): exportKmlModelCallback {
     const exported = new Map<string, string>();
     let counter = 1;
 
-    return (model: ModelGraphics, time: JulianDate, externalFiles: KmlExternalFiles) => {
+    return (model: ModelGraphics, time: JulianDate, externalFiles: any) => {
         const uri = model.uri?.getValue(time);
         if (!uri) {
             return '';
@@ -33,7 +35,7 @@ export function createKmlModelCallback(): exportKmlModelCallback {
         const filename = urlFileName || `model-${counter++}.${ext}`;
 
         exported.set(resource.url, filename);
-        externalFiles[filename] = resource.fetchBlob() as unknown as Blob;
+        externalFiles[filename] = resource.fetchBlob();
         return filename;
     };
 }
@@ -41,9 +43,9 @@ export function createKmlModelCallback(): exportKmlModelCallback {
 export async function supplementKmlExternalFiles(
     entities: Entity[],
     kml: string,
-    externalFiles: KmlExternalFiles,
+    externalFiles: KmlExternalFilesInput,
 ): Promise<{ kml: string; externalFiles: KmlExternalFiles }> {
-    const files = { ...externalFiles };
+    const files = await drainExternalFiles({ ...externalFiles });
     let updatedKml = kml;
     let counter = Object.keys(files).length + 1;
     const exportedUrls = new Map<string, string>();
@@ -89,4 +91,21 @@ export async function supplementKmlExternalFiles(
     }
 
     return { kml: updatedKml, externalFiles: files };
+}
+
+async function drainExternalFiles(files: KmlExternalFilesInput): Promise<KmlExternalFiles> {
+    const drained: KmlExternalFiles = {};
+    await Promise.all(Object.entries(files).map(async ([name, entry]) => {
+        try {
+            const blob = entry instanceof Promise ? await entry : entry;
+            if (blob) {
+                drained[name] = blob;
+            } else {
+                console.warn('Skipping empty KML external file', name);
+            }
+        } catch (err) {
+            console.warn('Failed to fetch KML external file', name, err);
+        }
+    }));
+    return drained;
 }

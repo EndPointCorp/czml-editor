@@ -10,8 +10,12 @@ import { createSelector } from './img-selector/integration';
 
 const getArgs = new URLSearchParams(window.location.search);
 
-Ion.defaultAccessToken = getArgs.get('ionToken') || 
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyNWI3ZDU1Zi0zNGFmLTRlYmQtODRiMy05MTA4YmFiMDM3YTEiLCJpZCI6NzMxNCwiaWF0IjoxNzUwODc0MDM1fQ.a6sCc76MKEGhmOyZF9Kcegwyfal6bcLZ0JFxSz7xCcc';
+const ionToken = getArgs.get('ionToken') || import.meta.env.VITE_CESIUM_ION_TOKEN;
+if (ionToken) {
+  Ion.defaultAccessToken = ionToken;
+} else {
+  console.warn('No Cesium Ion access token provided. Set VITE_CESIUM_ION_TOKEN or pass ?ionToken=<token>.');
+}
 
 export const ViewerContext = createContext<CesiumViewer| null>(null);
 
