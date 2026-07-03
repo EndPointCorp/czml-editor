@@ -1,6 +1,7 @@
 import { Entity, Property, Resource } from "cesium";
 import { getResourceByPath } from "./field-image-writer";
 import { WriterContext } from "../export-czml";
+import { makeUniqueFilename } from "../export-filename";
 import { writeScalar } from "./field-writers";
 import { blobToBase64 } from "../../misc/file-to-base64";
 import { getModelSource, ModelSourceFile } from "../model-source-registry";
@@ -101,6 +102,7 @@ export async function exportModels(entities: Entity[]) {
     const exportMap: ModelExport = {};
 
     const counter = {n: 1};
+    const usedPaths = new Set<string>();
 
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['model', 'uri']);
@@ -120,7 +122,10 @@ export async function exportModels(entities: Entity[]) {
             try {
                 const blob = await resource.fetchBlob();
                 if (blob) {
-                    const targetPath = await modelFileName(resource, blob, counter);
+                    const targetPath = makeUniqueFilename(
+                        await modelFileName(resource, blob, counter),
+                        usedPaths,
+                    );
                     exportMap[resource.url] = {targetPath, files: [{path: targetPath, blob}]};
                 }
             }
@@ -142,6 +147,7 @@ export async function exportModels(entities: Entity[]) {
 export async function exportModelNames(entities: Entity[]): Promise<ModelRefMap> {
     const result: ModelRefMap = {};
     const counter = {n: 1};
+    const usedPaths = new Set<string>();
 
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['model', 'uri']);
@@ -156,7 +162,10 @@ export async function exportModelNames(entities: Entity[]): Promise<ModelRefMap>
             // Only fetch the blob to detect the format when the URL carries no
             // file name we could use instead.
             const blob = modelUrlFileName(resource) ? undefined : await safeFetchBlob(resource);
-            result[resource.url] = await modelFileName(resource, blob, counter);
+            result[resource.url] = makeUniqueFilename(
+                await modelFileName(resource, blob, counter),
+                usedPaths,
+            );
         }
     }
 

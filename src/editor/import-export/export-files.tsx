@@ -3,7 +3,7 @@ import { useCallback, useState } from "preact/hooks";
 
 import "./export-files.css"
 import { exportAsCzml } from "../../czml-ext/export-czml";
-import { getExportBaseName } from "../../czml-ext/export-filename";
+import { getExportBaseName, nextDownloadFilename } from "../../czml-ext/export-filename";
 import { createKmlModelCallback, supplementKmlExternalFiles } from "../../czml-ext/export-kml-assets";
 import { normalizeZipPath } from "../../czml-ext/zip-asset-resolver";
 
@@ -58,12 +58,12 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     await zipWriter.add(name, file.stream());
                 }
 
-                downloadBlobFile(await zipWriter.close(), `${baseName}.kmz`);
+                downloadBlobFile(await zipWriter.close(), nextDownloadFilename(`${baseName}.kmz`));
             }
             else {
                 const mime = 'application/vnd.google-earth.kml+xml';
                 const kmlDataLink = `data:${mime};charset=utf-8,` + encodeURIComponent(supplemented.kml);
-                downloadAsFile(kmlDataLink, `${baseName}.kml`);
+                downloadAsFile(kmlDataLink, nextDownloadFilename(`${baseName}.kml`));
             }
         }
         catch (e) {
@@ -87,43 +87,53 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             const baseName = getExportBaseName(entitiesToExport);
             
             if (archived) {
+                const archiveFileName = nextDownloadFilename(`${baseName}.czmz`);
+                const archiveBaseName = archiveFileName.replace(/\.czmz$/i, '');
                 const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
-                await zipWriter.add(`${baseName}.czml`, new TextReader(czmlText));
+                await zipWriter.add(
+                    normalizeZipPath(archiveBaseName, `${archiveBaseName}.czml`),
+                    new TextReader(czmlText),
+                );
         
                 if (exportedImages) {
                     for (const { targetPath, img } of Object.values(exportedImages)) {
                         const canvas = new OffscreenCanvas(img.width, img.height);
                         canvas.getContext('2d')?.drawImage(img, 0, 0);
                         const blob = await canvas.convertToBlob();
-                        await zipWriter.add(targetPath, blob.stream())
+                        await zipWriter.add(
+                            normalizeZipPath(archiveBaseName, targetPath),
+                            blob.stream(),
+                        );
                     }
                 }
 
                 if (exportedModels) {
                     for (const { files } of Object.values(exportedModels)) {
                         for (const { path, blob } of files) {
-                            await zipWriter.add(path, blob.stream());
+                            await zipWriter.add(
+                                normalizeZipPath(archiveBaseName, path),
+                                blob.stream(),
+                            );
                         }
                     }
                 }
 
                 if (exportedTilesets) {
-                    for (const { targetPath, files } of Object.values(exportedTilesets)) {
-                        const tilesetDir = targetPath.replace(/\/tileset\.json$/i, '');
+                    for (const { files } of [...new Set(Object.values(exportedTilesets))]) {
                         for (const [relPath, blob] of Object.entries(files)) {
-                            const zipPath = tilesetDir
-                                ? normalizeZipPath(tilesetDir, relPath)
-                                : relPath;
-                            await zipWriter.add(zipPath, blob.stream());
+                            await zipWriter.add(
+                                normalizeZipPath(archiveBaseName, relPath),
+                                blob.stream(),
+                            );
                         }
                     }
                 }
         
-                downloadBlobFile(await zipWriter.close(), `${baseName}.czml.zip`);
+                downloadBlobFile(await zipWriter.close(), archiveFileName);
             }
             else {
                 const czmlData = 'data:text/json;charset=utf-8,' + encodeURIComponent(czmlText);
-                downloadAsFile(czmlData, `${baseName}.czml`);
+                downloadAsFile(czmlData, nextDownloadFilename(`${baseName}.czml`));
             }
         }
         catch(e) {
