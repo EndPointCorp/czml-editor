@@ -1,3 +1,5 @@
+/** Normalize a zip path by joining parts, converting backslashes, and resolving `..`/`.` segments.
+    Used to produce consistent forward-slash paths for zip archive entries and lookups. */
 export function normalizeZipPath(...parts: string[]): string {
     const combined = parts.join('/').replace(/\\/g, '/');
     const segments = combined.split('/');

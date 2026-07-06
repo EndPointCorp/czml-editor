@@ -32,34 +32,49 @@ export function writeTilesetUri(prop: Property, ctx: WriterContext) {
 export async function exportTilesets(entities: Entity[]): Promise<TilesetExport> {
     const exportMap: TilesetExport = {};
     let counter = 1;
-    const usedJsonPaths = new Set<string>();
     const usedAssetDirs = new Set<string>();
 
+    const tilesetEntries: { resource: Resource; source: TilesetSource | undefined }[] = [];
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['tileset', 'uri']);
         if (!resource || findExportedTileset(exportMap, resource.url)) {
             continue;
         }
-
         const source = findTilesetSource(resource);
+        tilesetEntries.push({ resource, source });
+    }
+
+    const isSingle = tilesetEntries.length <= 1;
+
+    for (const { resource, source } of tilesetEntries) {
         if (source) {
             const stem = source.fileName
                 ? modelNameFromFileName(source.fileName)
                 : `tileset-${counter++}`;
-            const targetPath = makeUniqueFilename('tileset.json', usedJsonPaths);
-            const assetsBaseDir = makeUniqueFilename(
-                normalizeZipPath('tilesets', stem),
-                usedAssetDirs,
-            );
-            const files = await relocateTilesetFiles(
-                Object.fromEntries(source.files.map(file => [file.path, file.blob])),
-                targetPath,
-                assetsBaseDir,
-            );
-            addTilesetExportEntry(exportMap, resource, source, {
-                targetPath,
-                files,
-            });
+
+            if (isSingle) {
+                const files = relocateTilesetFiles(
+                    Object.fromEntries(source.files.map(file => [file.path, file.blob])),
+                    '',
+                );
+                addTilesetExportEntry(exportMap, resource, source, {
+                    targetPath: 'tileset.json',
+                    files,
+                });
+            } else {
+                const assetsBaseDir = makeUniqueFilename(
+                    normalizeZipPath('tilesets', stem),
+                    usedAssetDirs,
+                );
+                const files = relocateTilesetFiles(
+                    Object.fromEntries(source.files.map(file => [file.path, file.blob])),
+                    assetsBaseDir,
+                );
+                addTilesetExportEntry(exportMap, resource, source, {
+                    targetPath: normalizeZipPath(assetsBaseDir, 'tileset.json'),
+                    files,
+                });
+            }
             continue;
         }
 
@@ -68,19 +83,27 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
             : new URL(resource.url).pathname;
         const urlDirMatch = urlPathname?.match(/\/([^/]+)\/tileset\.json$/i);
         const dirName = urlDirMatch?.[1] || `tileset-${counter++}`;
-        const targetPath = makeUniqueFilename('tileset.json', usedJsonPaths);
-        const assetsBaseDir = makeUniqueFilename(
-            normalizeZipPath('tilesets', dirName),
-            usedAssetDirs,
-        );
 
         try {
-            const files = await relocateTilesetFiles(
-                await collectTilesetFiles(resource),
-                targetPath,
-                assetsBaseDir,
-            );
-            addTilesetExportEntry(exportMap, resource, undefined, { targetPath, files });
+            const sourceFiles = await collectTilesetFiles(resource);
+
+            if (isSingle) {
+                const files = relocateTilesetFiles(sourceFiles, '');
+                addTilesetExportEntry(exportMap, resource, undefined, {
+                    targetPath: 'tileset.json',
+                    files,
+                });
+            } else {
+                const assetsBaseDir = makeUniqueFilename(
+                    normalizeZipPath('tilesets', dirName),
+                    usedAssetDirs,
+                );
+                const files = relocateTilesetFiles(sourceFiles, assetsBaseDir);
+                addTilesetExportEntry(exportMap, resource, undefined, {
+                    targetPath: normalizeZipPath(assetsBaseDir, 'tileset.json'),
+                    files,
+                });
+            }
         } catch {
             console.warn('failed to export tileset', resource.url);
         }
@@ -193,70 +216,15 @@ async function collectTilesetFiles(rootResource: Resource): Promise<Record<strin
     return files;
 }
 
-async function relocateTilesetFiles(
+function relocateTilesetFiles(
     sourceFiles: Record<string, Blob>,
-    targetPath: string,
-    assetsBaseDir: string,
-): Promise<Record<string, Blob>> {
-    const pathMap = new Map<string, string>();
-    for (const relPath of Object.keys(sourceFiles)) {
-        pathMap.set(
-            relPath,
-            relPath === 'tileset.json'
-                ? targetPath
-                : normalizeZipPath(assetsBaseDir, relPath),
-        );
-    }
-
+    prefix: string,
+): Record<string, Blob> {
     const output: Record<string, Blob> = {};
     for (const [relPath, blob] of Object.entries(sourceFiles)) {
-        const nextPath = pathMap.get(relPath) ?? relPath;
-        output[nextPath] = await rewriteTilesetFile(blob, relPath, nextPath, pathMap);
+        output[prefix ? normalizeZipPath(prefix, relPath) : relPath] = blob;
     }
-
     return output;
-}
-
-async function rewriteTilesetFile(
-    blob: Blob,
-    originalPath: string,
-    rewrittenPath: string,
-    pathMap: Map<string, string>,
-): Promise<Blob> {
-    if (!/\.json$/i.test(originalPath)) {
-        return blob;
-    }
-
-    const json = JSON.parse(await blob.text());
-    rewriteRelativeUris(json, originalPath, rewrittenPath, pathMap);
-    return new Blob([JSON.stringify(json)], { type: 'application/json' });
-}
-
-function rewriteRelativeUris(
-    node: unknown,
-    originalPath: string,
-    rewrittenPath: string,
-    pathMap: Map<string, string>,
-) {
-    if (!node || typeof node !== 'object') {
-        return;
-    }
-    if (Array.isArray(node)) {
-        node.forEach(item => rewriteRelativeUris(item, originalPath, rewrittenPath, pathMap));
-        return;
-    }
-
-    for (const [key, val] of Object.entries(node)) {
-        if (key === 'uri' && typeof val === 'string' && !/^https?:|^blob:|^data:/i.test(val)) {
-            const originalTarget = joinRelative(dirName(originalPath), val);
-            const rewrittenTarget = pathMap.get(originalTarget);
-            if (rewrittenTarget) {
-                (node as Record<string, unknown>)[key] = relativePath(dirName(rewrittenPath), rewrittenTarget);
-            }
-        } else if (val && typeof val === 'object') {
-            rewriteRelativeUris(val, originalPath, rewrittenPath, pathMap);
-        }
-    }
 }
 
 function replaceUrisInJson(
@@ -311,25 +279,6 @@ function joinRelative(baseDir: string, relativeUri: string): string {
         }
     }
     return result.join('/');
-}
-
-function dirName(path: string): string {
-    const slash = path.lastIndexOf('/');
-    return slash >= 0 ? path.substring(0, slash) : '';
-}
-
-function relativePath(fromDir: string, toPath: string): string {
-    const fromParts = fromDir ? fromDir.split('/').filter(Boolean) : [];
-    const toParts = toPath.split('/').filter(Boolean);
-
-    let shared = 0;
-    while (shared < fromParts.length && shared < toParts.length && fromParts[shared] === toParts[shared]) {
-        shared += 1;
-    }
-
-    const up = new Array(fromParts.length - shared).fill('..');
-    const down = toParts.slice(shared);
-    return [...up, ...down].join('/') || '.';
 }
 
 function toResourceUrl(val: unknown): string | undefined {

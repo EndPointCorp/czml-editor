@@ -91,7 +91,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                 const archiveBaseName = archiveFileName.replace(/\.czmz$/i, '');
                 const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
                 await zipWriter.add(
-                    normalizeZipPath(archiveBaseName, `${archiveBaseName}.czml`),
+                    `${archiveBaseName}.czml`,
                     new TextReader(czmlText),
                 );
         
@@ -101,7 +101,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                         canvas.getContext('2d')?.drawImage(img, 0, 0);
                         const blob = await canvas.convertToBlob();
                         await zipWriter.add(
-                            normalizeZipPath(archiveBaseName, targetPath),
+                            normalizeZipPath(targetPath),
                             blob.stream(),
                         );
                     }
@@ -111,7 +111,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     for (const { files } of Object.values(exportedModels)) {
                         for (const { path, blob } of files) {
                             await zipWriter.add(
-                                normalizeZipPath(archiveBaseName, path),
+                                normalizeZipPath(path),
                                 blob.stream(),
                             );
                         }
@@ -122,7 +122,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     for (const { files } of [...new Set(Object.values(exportedTilesets))]) {
                         for (const [relPath, blob] of Object.entries(files)) {
                             await zipWriter.add(
-                                normalizeZipPath(archiveBaseName, relPath),
+                                normalizeZipPath(relPath),
                                 blob.stream(),
                             );
                         }
