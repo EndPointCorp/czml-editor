@@ -41,6 +41,3 @@ export function FilesSection({ entities, entitiesExtra, onLoad }: FilesSectionPr
         </Section>
     );
 }
-
-
-

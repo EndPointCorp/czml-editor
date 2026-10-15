@@ -1,7 +1,7 @@
 import './editor.css';
 
 import { Entity, Viewer } from 'cesium';
-import { useCallback, useContext, useMemo, useState } from 'preact/hooks';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'preact/hooks';
 import { EntytyEditor } from './entity-editor';
 import { EntitiesList } from './entity-list/entities-list';
 
@@ -19,7 +19,9 @@ import { StyleCopyDialogue } from './style-copy-dialogue';
 import { applyModelEntityNames, applyTilesetEntityNames } from '../czml-ext/model-name';
 import { CzmlDataSourceExtension } from '../czml-ext/czml-ds-ext';
 import { CesiumDataSource } from './import-export/files-section';
+import { CmsSceneSection } from './import-export/cms-scene';
 
+const cmsIntegrationEnabled = import.meta.env.VITE_CMS_INTEGRATION_ENABLED;
 
 export type EditorContextT = {
     geometryEditor?: GeometryEditor;
@@ -132,6 +134,7 @@ export function Editor() {
         <div id={'editor'} class={'section entity-editor'}>
             <EditorContext value={editorContext}>
                 <FilesSection entities={entities} entitiesExtra={extra} onLoad={handleDsLoad} />
+                {cmsIntegrationEnabled && <CmsSceneSection />}
                 <SharedResourcesContext value={{resources, setResources}}>
                     <CreateEntitySection {...{ onEntityCreated }} />
                     <EntitiesList {...{ entities, entity, extra, selectEntity, deleteEntity }} 
