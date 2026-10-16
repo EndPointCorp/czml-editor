@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect, useRef, useState } from "preact/hooks";
 import { ViewerContext } from "../../app";
-import { ConstantProperty, Entity, InfoBox, Property as CesiumProperty } from "cesium";
+import { Entity, InfoBox } from "cesium";
 import format from "html-format";
 
 import "./description-fld.css";
@@ -18,8 +18,7 @@ export function DescriptionFld({entity}: DescriptionFldProps) {
     
     const infoBoxRef = useRef<InfoBox>();
     
-    const property = entity?.description as CesiumProperty;
-    const description = (property as ConstantProperty)?.valueOf();
+    const description = entity?.description;
 
     const [editorContent, setEditorContent] = useState<string>();
 
@@ -31,7 +30,7 @@ export function DescriptionFld({entity}: DescriptionFldProps) {
         const infoBox = infoBoxRef.current;
         if (infoBox) {
             infoBox.viewModel.showInfo = false;
-            infoBox.viewModel.description = description;
+            infoBox.viewModel.description = description || '';
         }
 
     }, [description, infoBoxRef, setPreview]);
@@ -58,8 +57,8 @@ export function DescriptionFld({entity}: DescriptionFldProps) {
 
         const infoBox = infoBoxRef.current;
         if (infoBox) {
-            infoBox.viewModel.description = description;
-            infoBox.viewModel.showInfo = show && description;
+            infoBox.viewModel.description = description || '';
+            infoBox.viewModel.showInfo = show && !!description;
         }
 
     }, [description, infoBoxRef, preview, setPreview]);
@@ -77,36 +76,26 @@ export function DescriptionFld({entity}: DescriptionFldProps) {
     
     const handleEditSave = useCallback(() => {
         if (entity) {
-            if (property) {
-                (property as ConstantProperty).setValue(editorContent);
-            }
-            else {
-                entity.description = new ConstantProperty(editorContent);
-            }
+            entity.description = editorContent;
         }
         
         setEdit(false);
         setEditorContent(undefined);
-    }, [entity, property, editorContent, setEditorContent, setEdit]);
+    }, [entity, editorContent, setEditorContent, setEdit]);
 
 
     const handleEditorInput = useCallback((evnt: Event) => {
         setEditorContent((evnt.target as HTMLTextAreaElement).value);
-    }, [entity, property, setEditorContent]);
+    }, [entity, setEditorContent]);
 
     const handleFormatting = useCallback(() => {
         const text = textAreaRef.current?.value;
         const description = text && removeEmptyStrings(format(text));
         if (entity && description) {
-            if (property) {
-                (property as ConstantProperty).setValue(description);
-            }
-            else {
-                entity.description = new ConstantProperty(description);
-            }
+            entity.description = description;
             setEditorContent(description);
         }
-    }, [textAreaRef, entity, property, setEditorContent]);
+    }, [textAreaRef, entity, setEditorContent]);
 
     return (
     <div class={'entity-description-fld'}>

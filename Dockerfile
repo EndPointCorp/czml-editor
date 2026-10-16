@@ -11,8 +11,8 @@ COPY . ./
 RUN cd ./3dparty/cesium-img-selector && \
     yarn && yarn build
 
-RUN cd /usr/src/app && \
-    yarn && yarn build
+# RUN cd /usr/src/app && \
+#     yarn && yarn build
 
 COPY docker/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

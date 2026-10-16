@@ -2,7 +2,7 @@ import { DataSource, DataSourceClock, Entity } from "cesium";
 import { exportModels as exportModelsF, exportModelsAsDataUri as exportModelsAsDataUriF, exportModelNames as exportModelNamesF, ModelRefMap, ModelExport } from "./writers/field-gltf-writer";
 import { exportTilesets as exportTilesetsF, TilesetExport } from "./writers/field-tileset-writer";
 import { buildImagesMap, exportImages as exportImagesF, exportImagesAsDataUri as exportImagesAsDataUriF, exportImageNames as exportImageNamesF, getResourceByPath, ImageExport, ImageRefMap, ResourcesMap } from "./writers/field-image-writer";
-import { writeOrientation, writePosition, writePropertyBag, writeScalar, writeTimeIntervalCollectionValue } from "./writers/field-writers";
+import { writeOrientation, writePosition, writePropertyBag, writeTimeIntervalCollectionValue } from "./writers/field-writers";
 import { writeLabel } from "./writers/graphics/label-writer";
 import { writeBillboard } from "./writers/graphics/billboard-writer";
 import { writeModel } from "./writers/graphics/model-writer";
@@ -185,7 +185,7 @@ export async function entityToPacket(entity: Entity, ctx: WriterContext) {
     }
 
     if (entity.description) {
-        packet.description = writeScalar(entity.description, {...ctx, path: ['description']});
+        packet.description = entity.description;
     }
 
     if (entity.viewFrom) {
