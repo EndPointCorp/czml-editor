@@ -1,8 +1,32 @@
-import { ConstantProperty, Entity, Property, Resource } from "cesium";
+import { ConstantProperty, Entity, ImageMaterialProperty, Property, Resource } from "cesium";
 import { ExportOptions, WriterContext } from "../export-czml";
 import { makeUniqueFilename } from "../export-filename";
 import { writeScalar } from "./field-writers";
 import { blobToBase64 } from "../../misc/file-to-base64";
+import type { ExportReporter } from "../export-czml";
+
+/** Human-readable list of the entities a resource belongs to, for export warnings. */
+export function describeEntities(entities: Entity[]): string {
+    const ids = [...new Set(entities.map(e => e.id).filter(Boolean))];
+    if (ids.length === 0) {
+        return 'an entity';
+    }
+    return ids.length === 1
+        ? `entity "${ids[0]}"`
+        : `entities ${ids.map(id => `"${id}"`).join(', ')}`;
+}
+
+/** Shortens a resource URL to something meaningful in a warning (blob/data URIs have no name). */
+export function describeResourceUrl(url: string): string {
+    if (/^blob:/i.test(url)) {
+        return 'an in-memory (blob) resource';
+    }
+    if (/^data:/i.test(url)) {
+        return 'an embedded data resource';
+    }
+    const name = url.split(/[?#]/)[0].split('/').pop();
+    return name ? `"${name}"` : `"${url}"`;
+}
 
 /**
  * This function is asynchronous to support async image transformations
@@ -48,13 +72,38 @@ export async function writeImage(property: Property, ctx: WriterContext) {
 export type ResourcesMap = {
     [key: string]: Entity[]
 }
+
+/** Graphics whose fill material can reference an image texture. */
+const IMAGE_MATERIAL_GRAPHICS = ['polygon', 'rectangle', 'box', 'cylinder'] as const;
+
+function addResourceToMap(resource: Resource | undefined, entity: Entity, map: ResourcesMap) {
+    if (!resource) {
+        return;
+    }
+    const entry = map[resource.url] || [];
+    map[resource.url] = [...entry, entity];
+}
+
 export function buildImagesMap(entities: Entity[], path: string[], map: ResourcesMap) {
 
     for (const entity of entities) {
-        const resource = getResourceByPath(entity, path);
-        if (resource) {
-            const entry = map[resource.url] || [];
-            map[resource.url] = [...entry, entity];
+        addResourceToMap(getResourceByPath(entity, path), entity, map);
+    }
+}
+
+/**
+ * Collects images referenced by {@link ImageMaterialProperty} materials (polygon,
+ * rectangle, box, cylinder). These are written through the same `writeImage`
+ * path as billboard images, so they must be gathered here too or their (possibly
+ * blob) URLs would be emitted verbatim instead of embedded / renamed.
+ */
+export function buildMaterialImagesMap(entities: Entity[], map: ResourcesMap) {
+    for (const entity of entities) {
+        for (const graphic of IMAGE_MATERIAL_GRAPHICS) {
+            const material = (entity as any)[graphic]?.material;
+            if (material instanceof ImageMaterialProperty) {
+                addResourceToMap(resolveResource(material.image), entity, map);
+            }
         }
     }
 }
@@ -84,7 +133,7 @@ export type ImageExport = {
         img: ImageBitmap | HTMLImageElement
     }
 };
-export async function exportImages(imgs: ResourcesMap, options: ExportOptions) {
+export async function exportImages(imgs: ResourcesMap, options: ExportOptions, report?: ExportReporter) {
     const {exportImagesPath = ''} = options;
 
     const counter = {n: 1};
@@ -92,7 +141,7 @@ export async function exportImages(imgs: ResourcesMap, options: ExportOptions) {
 
     let result: ImageExport = {};
 
-    for (const [url] of Object.entries(imgs)) {
+    for (const [url, entities] of Object.entries(imgs)) {
 
         const resource = new Resource(url);
         const name = imageFileName(url, counter);
@@ -108,13 +157,11 @@ export async function exportImages(imgs: ResourcesMap, options: ExportOptions) {
                 }
             }
             else {
-                // TODO: Error reporting
-                console.warn('failed to fetch image');
+                report?.(`Failed to fetch image ${describeResourceUrl(url)} for ${describeEntities(entities)}; it was exported by reference only.`);
             }
         }
         catch {
-            // TODO: Error reporting
-            console.warn('failed to fetch image');
+            report?.(`Failed to fetch image ${describeResourceUrl(url)} for ${describeEntities(entities)}; it was exported by reference only.`);
         }
     }
 
@@ -151,10 +198,10 @@ export function exportImageNames(imgs: ResourcesMap, options: ExportOptions): Im
  * Fetches every referenced image and encodes it as a base64 data URI so it can
  * be embedded inline in a single self-contained .czml file (no zip archive).
  */
-export async function exportImagesAsDataUri(imgs: ResourcesMap): Promise<ImageRefMap> {
+export async function exportImagesAsDataUri(imgs: ResourcesMap, report?: ExportReporter): Promise<ImageRefMap> {
     const result: ImageRefMap = {};
 
-    for (const [url] of Object.entries(imgs)) {
+    for (const [url, entities] of Object.entries(imgs)) {
         const resource = new Resource(url);
 
         // Already a data URI, no need to fetch and re-encode it
@@ -169,38 +216,46 @@ export async function exportImagesAsDataUri(imgs: ResourcesMap): Promise<ImageRe
                 result[url] = await blobToBase64(blob);
             }
             else {
-                console.warn('failed to fetch image for inline export', url);
+                report?.(`Failed to embed image ${describeResourceUrl(url)} for ${describeEntities(entities)} as base64; the original URL was kept.`);
             }
         }
         catch {
-            console.warn('failed to fetch image for inline export', url);
+            report?.(`Failed to embed image ${describeResourceUrl(url)} for ${describeEntities(entities)} as base64; the original URL was kept.`);
         }
     }
 
     return result;
 }
 
+export function resolveResource(property: unknown): Resource | undefined {
+    if (!property) {
+        return undefined;
+    }
+
+    if (property instanceof Resource) {
+        return property;
+    }
+
+    if (typeof property === 'string') {
+        return new Resource(property);
+    }
+
+    if ((property as any).isConstant && (property as any).getValue) {
+        const val = (property as ConstantProperty).getValue();
+        if (val instanceof Resource) {
+            return val;
+        }
+
+        if (typeof val === 'string') {
+            return new Resource(val);
+        }
+    }
+}
+
 export function getResourceByPath(entity: Entity, path: string[]) {
     const property = getPropertyByPath(entity, path) as (Property | ConstantProperty | Resource | string | undefined);
 
-    if (property) {
-        if (typeof property === 'string') {
-            return new Resource(property);
-        }
-
-        if ((property as any).isConstant && (property as any).getValue) {
-            const val = (property as ConstantProperty).getValue();
-            if (val) {
-                if (val instanceof Resource) {
-                    return val;
-                }
-
-                if (typeof val === 'string') {
-                    return new Resource(val);
-                }
-            }
-        }
-    }
+    return resolveResource(property);
 }
 
 function getPropertyByPath(entity: Entity, path: string[]) {

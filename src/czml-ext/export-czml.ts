@@ -1,8 +1,8 @@
 import { DataSource, DataSourceClock, Entity } from "cesium";
 import { exportModels as exportModelsF, exportModelsAsDataUri as exportModelsAsDataUriF, exportModelNames as exportModelNamesF, ModelRefMap, ModelExport } from "./writers/field-gltf-writer";
 import { exportTilesets as exportTilesetsF, TilesetExport } from "./writers/field-tileset-writer";
-import { buildImagesMap, exportImages as exportImagesF, exportImagesAsDataUri as exportImagesAsDataUriF, exportImageNames as exportImageNamesF, getResourceByPath, ImageExport, ImageRefMap, ResourcesMap } from "./writers/field-image-writer";
-import { writeOrientation, writePosition, writePropertyBag, writeTimeIntervalCollectionValue } from "./writers/field-writers";
+import { buildImagesMap, buildMaterialImagesMap, exportImages as exportImagesF, exportImagesAsDataUri as exportImagesAsDataUriF, exportImageNames as exportImageNamesF, getResourceByPath, ImageExport, ImageRefMap, ResourcesMap } from "./writers/field-image-writer";
+import { reportIssue, writeOrientation, writePosition, writePropertyBag, writeTimeIntervalCollectionValue } from "./writers/field-writers";
 import { writeLabel } from "./writers/graphics/label-writer";
 import { writeBillboard } from "./writers/graphics/billboard-writer";
 import { writeModel } from "./writers/graphics/model-writer";
@@ -24,10 +24,14 @@ export type ResourceCacheLine = {
     path: string[]
 }
 
+/** Callback used by the writers to surface non-fatal export problems to the UI. */
+export type ExportReporter = (message: string) => void;
+
 export type WriterContext = {
     options: ExportOptions,
     path: string[];
     resourcesMap: ResourcesMap;
+    issues?: string[];
     overwrite?: {
       srcPath: string[],
       dest: any
@@ -78,21 +82,26 @@ export type ExportOptions = {
 export async function exportAsCzml(entities: Entity[], options?: ExportOptions) {
     options = options || {};
     
+    const issues: string[] = [];
+
     const ctx: WriterContext = {
         options,
         path: [],
-        resourcesMap: {}
+        resourcesMap: {},
+        issues,
     };
+    const report: ExportReporter = message => reportIssue(message, ctx);
     const clock = options.dataSource?.clock;
 
     buildImagesMap(entities, ['billboard', 'image'], ctx.resourcesMap);
+    buildMaterialImagesMap(entities, ctx.resourcesMap);
 
     if (options.exportImages) {
-        ctx.exportedImages = await exportImagesF(ctx.resourcesMap, options);
+        ctx.exportedImages = await exportImagesF(ctx.resourcesMap, options, report);
     }
 
     if (options.exportModels) {
-        ctx.exportedModels = await exportModelsF(entities);
+        ctx.exportedModels = await exportModelsF(entities, report);
     }
 
     if (options.exportTilesets) {
@@ -101,13 +110,13 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
 
     if (options.embedImages !== undefined) {
         ctx.imageRefs = options.embedImages
-            ? await exportImagesAsDataUriF(ctx.resourcesMap)
+            ? await exportImagesAsDataUriF(ctx.resourcesMap, report)
             : exportImageNamesF(ctx.resourcesMap, options);
     }
 
     if (options.embedModels !== undefined) {
         ctx.modelRefs = options.embedModels
-            ? await exportModelsAsDataUriF(entities)
+            ? await exportModelsAsDataUriF(entities, report)
             : await exportModelNamesF(entities);
     }
 
@@ -139,6 +148,7 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
         exportedImages: ctx.exportedImages,
         exportedModels: ctx.exportedModels,
         exportedTilesets: ctx.exportedTilesets,
+        issues,
     };
 }
 

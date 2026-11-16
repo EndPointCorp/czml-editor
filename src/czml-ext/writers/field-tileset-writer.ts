@@ -3,9 +3,9 @@ import { makeUniqueFilename } from "../export-filename";
 import { modelNameFromFileName } from "../model-name";
 import { findTilesetSource, TilesetSource } from "../tileset-source-registry";
 import { normalizeZipPath } from "../zip-asset-resolver";
-import { getResourceByPath } from "./field-image-writer";
+import { describeEntities, getResourceByPath } from "./field-image-writer";
 import { WriterContext } from "../export-czml";
-import { writeScalar } from "./field-writers";
+import { reportIssue, writeScalar } from "./field-writers";
 
 export type TilesetExportEntry = {
     targetPath: string;
@@ -24,6 +24,19 @@ export function writeTilesetUri(prop: Property, ctx: WriterContext) {
     const exported = findExportedTileset(ctx.exportedTilesets, url);
     if (exported) {
         return exported.targetPath;
+    }
+
+    // A plain .czml keeps the tileset's original URL, which must be an external
+    // address. An in-memory (blob) URL only resolves inside this session, so the
+    // exported document would be broken. Warn the user (CZMZ export bundles the
+    // tileset files instead).
+    if (!ctx.options.exportTilesets && url && /^blob:/i.test(url)) {
+        reportIssue(
+            `Tileset for ${describeEntities(ctx.entity ? [ctx.entity] : [])} points to an `
+            + `in-memory (blob) URL, which will not resolve outside the editor. `
+            + `Use the CZMZ export, or provide an external tileset URL.`,
+            ctx,
+        );
     }
 
     return val;

@@ -1,6 +1,6 @@
 import { Entity, Property, Resource } from "cesium";
-import { getResourceByPath } from "./field-image-writer";
-import { WriterContext } from "../export-czml";
+import { describeEntities, describeResourceUrl, getResourceByPath } from "./field-image-writer";
+import { WriterContext, ExportReporter } from "../export-czml";
 import { makeUniqueFilename } from "../export-filename";
 import { writeScalar } from "./field-writers";
 import { blobToBase64 } from "../../misc/file-to-base64";
@@ -97,7 +97,7 @@ export function writeGltf(prop: Property, ctx: WriterContext) {
     return val;
 }
 
-export async function exportModels(entities: Entity[]) {
+export async function exportModels(entities: Entity[], report?: ExportReporter) {
 
     const exportMap: ModelExport = {};
 
@@ -128,9 +128,12 @@ export async function exportModels(entities: Entity[]) {
                     );
                     exportMap[resource.url] = {targetPath, files: [{path: targetPath, blob}]};
                 }
+                else {
+                    report?.(`Failed to fetch model ${describeResourceUrl(resource.url)} for ${describeEntities([entity])}; it was exported by reference only.`);
+                }
             }
             catch {
-                console.warn('failed to export model', resource.url);
+                report?.(`Failed to fetch model ${describeResourceUrl(resource.url)} for ${describeEntities([entity])}; it was exported by reference only.`);
             }
         }
     }
@@ -185,7 +188,7 @@ async function safeFetchBlob(resource: Resource): Promise<Blob | undefined> {
  * Fetches every referenced model and encodes it as a base64 data URI so it can
  * be embedded inline in a single self-contained .czml file (no zip archive).
  */
-export async function exportModelsAsDataUri(entities: Entity[]): Promise<ModelRefMap> {
+export async function exportModelsAsDataUri(entities: Entity[], report?: ExportReporter): Promise<ModelRefMap> {
     const result: ModelRefMap = {};
 
     for (const entity of entities) {
@@ -204,11 +207,11 @@ export async function exportModelsAsDataUri(entities: Entity[]): Promise<ModelRe
                     result[resource.url] = await blobToBase64(blob);
                 }
                 else {
-                    console.warn('failed to fetch model for inline export', resource.url);
+                    report?.(`Failed to embed model ${describeResourceUrl(resource.url)} for ${describeEntities([entity])} as base64; the original URL was kept.`);
                 }
             }
             catch {
-                console.warn('failed to fetch model for inline export', resource.url);
+                report?.(`Failed to embed model ${describeResourceUrl(resource.url)} for ${describeEntities([entity])} as base64; the original URL was kept.`);
             }
         }
     }

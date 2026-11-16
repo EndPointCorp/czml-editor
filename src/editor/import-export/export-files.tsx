@@ -27,6 +27,10 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
     const [inlineImages, setInlineImages] = useState<boolean>(true);
     const [inlineModels, setInlineModels] = useState<boolean>(true);
 
+    // Non-fatal problems encountered during the last export (e.g. a resource
+    // could not be embedded and its original URL was kept instead).
+    const [exportIssues, setExportIssues] = useState<string[]>([]);
+
     const handleDownloadKML = useCallback(async (archived?: boolean) => {
         const entitiesToExport = entities
             .filter(e => !(entitiesExtra?.[e.id].doNotExport))
@@ -80,7 +84,10 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
             .filter(e => !(entitiesExtra?.[e.id].doNotExport))
             .filter(e => !((e.entityCollection?.owner as any).__ignore));
 
-        const { czml, exportedImages, exportedModels, exportedTilesets } = await exportAsCzml(entitiesToExport, options);
+        setExportIssues([]);
+
+        const { czml, exportedImages, exportedModels, exportedTilesets, issues } = await exportAsCzml(entitiesToExport, options);
+        setExportIssues(issues);
         
         try {
             const czmlText = JSON.stringify(czml);
@@ -180,6 +187,18 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                             URL.
                         </div>
                     </div>
+
+                    {exportIssues.length > 0 && (
+                        <div class={'export-issues'}>
+                            <div class={'export-issues-title'}>
+                                {exportIssues.length} resource problem{exportIssues.length > 1 ? 's' : ''} during the last CZML export
+                            </div>
+                            <ul>
+                                {exportIssues.map((issue, index) => <li key={index}>{issue}</li>)}
+                            </ul>
+                        </div>
+                    )}
+
                     <h4>Export as KML</h4>
                     <div>
                         Not all cesium features can be represented as KML
