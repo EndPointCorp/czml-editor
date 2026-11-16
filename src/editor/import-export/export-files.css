@@ -23,3 +23,28 @@
     gap: 0.3em;
     margin: 0.6em 0;
 }
+
+.export-issues {
+    margin: 0.8em 0;
+    padding: 0.5em 0.8em;
+    border: 1px solid #e0a800;
+    border-left: 4px solid #e0a800;
+    background: #fff8e1;
+    border-radius: 3px;
+    max-width: 40em;
+}
+
+.export-issues-title {
+    font-weight: bold;
+    margin-bottom: 0.3em;
+}
+
+.export-issues ul {
+    margin: 0;
+    padding-left: 1.2em;
+}
+
+.export-issues li {
+    font-size: 0.85em;
+    margin: 0.2em 0;
+}

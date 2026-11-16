@@ -42,6 +42,14 @@ export function writeReferenceValue(prop: ReferenceProperty, _ctx: WriterContext
     return `${prop.targetId}#${prop.targetPropertyNames.join('.')}`;
 }
 
+/** Records a non-fatal export problem, both on the console and for the export UI. */
+export function reportIssue(message: string, ctx: WriterContext) {
+    console.warn(message);
+    if (ctx.issues && !ctx.issues.includes(message)) {
+        ctx.issues.push(message);
+    }
+}
+
 export function writeScalar(property: Property, ctx: WriterContext) {
     const overwrite = ctx.overwrite;
 
