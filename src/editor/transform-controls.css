@@ -1,0 +1,15 @@
+.transform-controls {
+    margin-top: 0.5em;
+}
+
+.transform-modes {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.transform-mode-button.selected {
+    outline: 2px solid #4aa3df;
+    font-weight: bold;
+}

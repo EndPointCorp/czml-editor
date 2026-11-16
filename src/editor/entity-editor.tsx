@@ -18,6 +18,7 @@ import { EditMultipointGeometry } from './multipoint-geometry';
 import { modelMetaData } from './meta/model-meta';
 import { tilesetMetaData } from './meta/tileset-meta';
 import { OrientationEditor } from './orientation-editor';
+import { TransformControls } from './transform-controls';
 import { Section } from '../misc/elements/section';
 import { Subsection } from '../misc/elements/subsection';
 import { PropertyMeta } from './meta/meta';
@@ -36,6 +37,11 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
 
     const [showData, setShowData] = useState<boolean>(false);
     const [_name, forceNameUpdate] = useState<string | undefined>(entity?.name);
+    const [transformTick, setTransformTick] = useState<number>(0);
+
+    const handleTransformChange = useCallback(() => {
+        setTransformTick(tick => tick + 1);
+    }, [setTransformTick]);
 
     const handleNameInput = useCallback((value: string) => {
         if (entity) {
@@ -92,11 +98,14 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
                     <button>Replace</button>
                 </div>}
                 
-                <PositionEditor key={`${entity.id}.position`} entity={entity} />
+                <PositionEditor key={`${entity.id}.position.${transformTick}`} entity={entity} />
 
                 {isMultiPoint && <EditMultipointGeometry entity={entity} onChange={onChange} />}
 
-                <OrientationEditor entity={entity} onChange={onChange} />
+                <OrientationEditor key={`${entity.id}.orientation.${transformTick}`} entity={entity} onChange={onChange} />
+
+                {(model || tileset) && <TransformControls key={`${entity.id}.transform`}
+                    entity={entity} onChange={handleTransformChange} />}
 
                 <EntityLabel key={`${entity.id}.label`} entity={entity} onChange={onChange} />
                 
@@ -108,7 +117,7 @@ export function EntytyEditor({entity, onChange, onStyleCopy}: EntityEditorProps)
             <Subsection key={entity.id + '.subsection-styling'}>
                 <h4>Styling properties</h4>
                 <button onClick={handleStyleCopy}>Copy styles</button>
-                <FeatureEditor entity={entity} 
+                <FeatureEditor key={`${entity.id}.feature.${transformTick}`} entity={entity} 
                     metadata={applicableMeta} onChange={handleEntityChange}/>
             </Subsection>
 
