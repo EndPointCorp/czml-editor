@@ -32,6 +32,8 @@ export type WriterContext = {
     path: string[];
     resourcesMap: ResourcesMap;
     issues?: string[];
+    /** Tileset blob URLs already reported, so each is warned about only once. */
+    reportedTilesetUrls?: Set<string>;
     overwrite?: {
       srcPath: string[],
       dest: any
@@ -105,7 +107,7 @@ export async function exportAsCzml(entities: Entity[], options?: ExportOptions) 
     }
 
     if (options.exportTilesets) {
-        ctx.exportedTilesets = await exportTilesetsF(entities);
+        ctx.exportedTilesets = await exportTilesetsF(entities, report);
     }
 
     if (options.embedImages !== undefined) {

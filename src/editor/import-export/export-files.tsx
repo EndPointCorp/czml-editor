@@ -152,7 +152,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
 
     return (
         <div class={'export'}>
-            <button onClick={() => {setExportDialogueOpen(true)}}>Export</button>
+            <button onClick={() => {setExportIssues([]); setExportDialogueOpen(true)}}>Export</button>
             <ModalPane visible={exportDialogueOpen}>
                 <div>
                     <div><button onClick={() => {setExportDialogueOpen(false)}}>Close</button></div>
@@ -191,7 +191,7 @@ export function ExportFiles({entities, entitiesExtra, onExport}: ExportFilesProp
                     {exportIssues.length > 0 && (
                         <div class={'export-issues'}>
                             <div class={'export-issues-title'}>
-                                {exportIssues.length} resource problem{exportIssues.length > 1 ? 's' : ''} during the last CZML export
+                                {exportIssues.length} resource problem{exportIssues.length > 1 ? 's' : ''} during the last export
                             </div>
                             <ul>
                                 {exportIssues.map((issue, index) => <li key={index}>{issue}</li>)}

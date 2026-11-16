@@ -3,8 +3,8 @@ import { makeUniqueFilename } from "../export-filename";
 import { modelNameFromFileName } from "../model-name";
 import { findTilesetSource, TilesetSource } from "../tileset-source-registry";
 import { normalizeZipPath } from "../zip-asset-resolver";
-import { describeEntities, getResourceByPath } from "./field-image-writer";
-import { WriterContext } from "../export-czml";
+import { describeEntities, describeResourceUrl, getResourceByPath } from "./field-image-writer";
+import { ExportReporter, WriterContext } from "../export-czml";
 import { reportIssue, writeScalar } from "./field-writers";
 
 export type TilesetExportEntry = {
@@ -31,26 +31,39 @@ export function writeTilesetUri(prop: Property, ctx: WriterContext) {
     // exported document would be broken. Warn the user (CZMZ export bundles the
     // tileset files instead).
     if (!ctx.options.exportTilesets && url && /^blob:/i.test(url)) {
-        reportIssue(
-            `Tileset for ${describeEntities(ctx.entity ? [ctx.entity] : [])} points to an `
-            + `in-memory (blob) URL, which will not resolve outside the editor. `
-            + `Use the CZMZ export, or provide an external tileset URL.`,
-            ctx,
-        );
+        const reported = ctx.reportedTilesetUrls ?? (ctx.reportedTilesetUrls = new Set<string>());
+        if (!reported.has(url)) {
+            reported.add(url);
+            reportIssue(
+                `Tileset for ${describeEntities(ctx.entity ? [ctx.entity] : [])} points to an `
+                + `in-memory (blob) URL, which will not resolve outside the editor. `
+                + `Use the CZMZ export, or provide an external tileset URL.`,
+                ctx,
+            );
+        }
     }
 
     return val;
 }
 
-export async function exportTilesets(entities: Entity[]): Promise<TilesetExport> {
+export async function exportTilesets(entities: Entity[], report?: ExportReporter): Promise<TilesetExport> {
     const exportMap: TilesetExport = {};
     let counter = 1;
     const usedAssetDirs = new Set<string>();
 
+    const entitiesByResourceUrl = new Map<string, Entity[]>();
     const tilesetEntries: { resource: Resource; source: TilesetSource | undefined }[] = [];
     for (const entity of entities) {
         const resource = getResourceByPath(entity, ['tileset', 'uri']);
-        if (!resource || findExportedTileset(exportMap, resource.url)) {
+        if (!resource) {
+            continue;
+        }
+
+        const refs = entitiesByResourceUrl.get(resource.url) ?? [];
+        refs.push(entity);
+        entitiesByResourceUrl.set(resource.url, refs);
+
+        if (findExportedTileset(exportMap, resource.url)) {
             continue;
         }
         const source = findTilesetSource(resource);
@@ -60,6 +73,7 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
     const isSingle = tilesetEntries.length <= 1;
 
     for (const { resource, source } of tilesetEntries) {
+        const refs = entitiesByResourceUrl.get(resource.url) ?? [];
         if (source) {
             const stem = source.fileName
                 ? modelNameFromFileName(source.fileName)
@@ -118,7 +132,10 @@ export async function exportTilesets(entities: Entity[]): Promise<TilesetExport>
                 });
             }
         } catch {
-            console.warn('failed to export tileset', resource.url);
+            report?.(
+                `Failed to export tileset ${describeResourceUrl(resource.url)} for `
+                + `${describeEntities(refs)}; it was referenced by its original URL instead.`,
+            );
         }
     }
 
