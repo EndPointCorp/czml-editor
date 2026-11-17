@@ -1,3 +1,9 @@
 dist/
 node_modules/
 yarn.lock
+
+# Never ship secrets into the image / build context
+.env
+.env.*
+!.env.example
+*.local

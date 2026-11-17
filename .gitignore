@@ -1,4 +1,7 @@
 stats.html
+.env
+.env.local
+.env.production
 
 # Logs
 logs
