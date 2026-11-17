@@ -11,6 +11,7 @@ import { StyleChanges } from '../geometry-editor/changes-tracker';
 import GeometryEditor from '../geometry-editor/geometry-editor';
 import { CreateEntityByClickController } from '../geometry-editor/input-new-entity';
 import { PositionDragController } from '../geometry-editor/position-drag-editor';
+import { TransformGizmo } from '../geometry-editor/transform-gizmo';
 import { DefaultSharedResources, mapBillboardImageResources, SharedResources } from '../geometry-editor/shared-resources';
 import { CreateEntitySection } from './create/create-section';
 import { FilesSection } from './import-export/files-section';
@@ -25,6 +26,7 @@ export type EditorContextT = {
     geometryEditor?: GeometryEditor;
     clickCreateController?: CreateEntityByClickController;
     positionDragController?: PositionDragController;
+    transformGizmo?: TransformGizmo;
 }
 
 export type SharedResourcesContextT = {
@@ -57,6 +59,7 @@ export function Editor() {
             geometryEditor: viewer ? new GeometryEditor(viewer) : undefined,
             clickCreateController: viewer ? new CreateEntityByClickController(viewer) : undefined,
             positionDragController: viewer ? new PositionDragController(viewer) : undefined,
+            transformGizmo: viewer ? new TransformGizmo(viewer) : undefined,
         }
     }, [viewer]);
 
